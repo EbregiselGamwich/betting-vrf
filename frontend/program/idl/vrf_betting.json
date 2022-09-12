@@ -1,0 +1,541 @@
+{
+  "version": "0.1.0",
+  "name": "vrf_betting",
+  "instructions": [
+    {
+      "name": "StatsAccountCreate",
+      "accounts": [
+        {
+          "name": "operator",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Operator Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "MintCreate",
+      "accounts": [
+        {
+          "name": "operator",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Operator Account"
+        },
+        {
+          "name": "mintAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Mint Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Token Program Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "UserAccountCreate",
+      "accounts": [
+        {
+          "name": "userWalletAccount",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "User Wallet Account"
+        },
+        {
+          "name": "userAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User Betting Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [
+        {
+          "name": "userAccountCreateArgs",
+          "type": {
+            "defined": "UserAccountCreateArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Game",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "StateAccountType"
+            }
+          },
+          {
+            "name": "host",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "unresolvedVrfResult",
+            "type": "u32"
+          },
+          {
+            "name": "totalLamportsIn",
+            "type": "u64"
+          },
+          {
+            "name": "totalLamportsOut",
+            "type": "u64"
+          },
+          {
+            "name": "minWager",
+            "type": "u64"
+          },
+          {
+            "name": "maxWager",
+            "type": "u64"
+          },
+          {
+            "name": "gameTypeConfig",
+            "type": {
+              "defined": "GameTypeConfig"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "StateAccountType"
+            }
+          },
+          {
+            "name": "totalGames",
+            "type": "u64"
+          },
+          {
+            "name": "totalUsers",
+            "type": "u32"
+          },
+          {
+            "name": "totalBets",
+            "type": "u32"
+          },
+          {
+            "name": "totalWager",
+            "type": "u64"
+          },
+          {
+            "name": "totalLamportsWonByBettors",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "StateAccountType"
+            }
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalBets",
+            "type": "u32"
+          },
+          {
+            "name": "currentLamports",
+            "type": "u64"
+          },
+          {
+            "name": "activeVrfResults",
+            "type": "u32"
+          },
+          {
+            "name": "referral",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "username",
+            "type": {
+              "option": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "VrfResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "StateAccountType"
+            }
+          },
+          {
+            "name": "isFullfilled",
+            "type": "bool"
+          },
+          {
+            "name": "isUsed",
+            "type": "bool"
+          },
+          {
+            "name": "markedForClose",
+            "type": "bool"
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "game",
+            "type": "publicKey"
+          },
+          {
+            "name": "betId",
+            "type": "u32"
+          },
+          {
+            "name": "alpha",
+            "type": {
+              "array": [
+                "u8",
+                72
+              ]
+            }
+          },
+          {
+            "name": "beta",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "pi",
+            "type": {
+              "array": [
+                "u8",
+                80
+              ]
+            }
+          },
+          {
+            "name": "betInput",
+            "type": {
+              "defined": "BetInput"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CoinFlipConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "hostProbabilityAdvantage",
+            "type": "u64"
+          },
+          {
+            "name": "payoutRate",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CoinFlipInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wager",
+            "type": "u64"
+          },
+          {
+            "name": "side",
+            "type": {
+              "defined": "CoinFlipSide"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CrashConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "multiplierStraightOnePossibility",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CrashInput",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "targetMultiplier",
+            "type": "u64"
+          },
+          {
+            "name": "wager",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccountCreateArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "username",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "referral",
+            "type": {
+              "option": "publicKey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CoinFlipSide",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Head"
+          },
+          {
+            "name": "Tail"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GameTypeConfig",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CoinFlip",
+            "fields": [
+              {
+                "name": "config",
+                "type": {
+                  "defined": "CoinFlipConfig"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Crash",
+            "fields": [
+              {
+                "name": "config",
+                "type": {
+                  "defined": "CrashConfig"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "BetInput",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CoinFlip",
+            "fields": [
+              {
+                "name": "input",
+                "type": {
+                  "defined": "CoinFlipInput"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Crash",
+            "fields": [
+              {
+                "name": "input",
+                "type": {
+                  "defined": "CrashInput"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "StateAccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "Stats"
+          },
+          {
+            "name": "UserAccount"
+          },
+          {
+            "name": "Vrf"
+          },
+          {
+            "name": "Game"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "NoAuthority",
+      "msg": "NoAuthority"
+    },
+    {
+      "code": 1,
+      "name": "AccountNotWritable",
+      "msg": "AccountNotWritable"
+    },
+    {
+      "code": 2,
+      "name": "AccountNotSigner",
+      "msg": "AccountNotSigner"
+    },
+    {
+      "code": 3,
+      "name": "WrongPDA",
+      "msg": "WrongPDA"
+    },
+    {
+      "code": 4,
+      "name": "WrongPubkey",
+      "msg": "WrongPubkey"
+    },
+    {
+      "code": 5,
+      "name": "WrongAccountOwner",
+      "msg": "WrongAccountOwner"
+    },
+    {
+      "code": 6,
+      "name": "VrfResultNotFullfilled",
+      "msg": "VrfResultNotFullfilled"
+    },
+    {
+      "code": 7,
+      "name": "VrfResultAlreadyUsed",
+      "msg": "VrfResultAlreadyUsed"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm",
+    "binaryVersion": "0.0.5",
+    "libVersion": "0.0.5"
+  }
+}
