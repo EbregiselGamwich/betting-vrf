@@ -31,46 +31,6 @@
       }
     },
     {
-      "name": "MintCreate",
-      "accounts": [
-        {
-          "name": "operator",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Operator Account"
-        },
-        {
-          "name": "mintAccount",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Mint Account"
-        },
-        {
-          "name": "statsPda",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Stats PDA Account"
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Token Program Account"
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "System Program Account"
-        }
-      ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 1
-      }
-    },
-    {
       "name": "UserAccountCreate",
       "accounts": [
         {
@@ -108,7 +68,130 @@
       ],
       "discriminant": {
         "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "UserAccountDeposit",
+      "accounts": [
+        {
+          "name": "depositor",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "The account to transfer lamports from"
+        },
+        {
+          "name": "userAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User Betting Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [
+        {
+          "name": "userAccountDepositArgs",
+          "type": {
+            "defined": "UserAccountDepositArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
         "value": 2
+      }
+    },
+    {
+      "name": "UserAccountWithdraw",
+      "accounts": [
+        {
+          "name": "userWalletAccount",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "User Wallet Account"
+        },
+        {
+          "name": "userAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User Betting Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "operator",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Operator Account"
+        },
+        {
+          "name": "referallAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Referral Wallet Account",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "userAccountWithdrawArgs",
+          "type": {
+            "defined": "UserAccountWithdrawArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "UserAccountClose",
+      "accounts": [
+        {
+          "name": "userWalletAccount",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "User Wallet Account"
+        },
+        {
+          "name": "userAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User Betting Account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
       }
     }
   ],
@@ -191,6 +274,14 @@
           {
             "name": "totalLamportsWonByBettors",
             "type": "u64"
+          },
+          {
+            "name": "totalLamportsDeposited",
+            "type": "u64"
+          },
+          {
+            "name": "totalLamportsWithdrew",
+            "type": "u64"
           }
         ]
       }
@@ -219,7 +310,19 @@
             "type": "u64"
           },
           {
+            "name": "lamportsDeposited",
+            "type": "u64"
+          },
+          {
+            "name": "lamportsWithdrew",
+            "type": "u64"
+          },
+          {
             "name": "activeVrfResults",
+            "type": "u32"
+          },
+          {
+            "name": "gamesHosted",
             "type": "u32"
           },
           {
@@ -393,6 +496,30 @@
       }
     },
     {
+      "name": "UserAccountDepositArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserAccountWithdrawArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "CoinFlipSide",
       "type": {
         "kind": "enum",
@@ -530,6 +657,11 @@
       "code": 7,
       "name": "VrfResultAlreadyUsed",
       "msg": "VrfResultAlreadyUsed"
+    },
+    {
+      "code": 8,
+      "name": "UserAccountNotSettled",
+      "msg": "UserAccountNotSettled"
     }
   ],
   "metadata": {

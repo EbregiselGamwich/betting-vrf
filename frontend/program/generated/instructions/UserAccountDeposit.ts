@@ -8,75 +8,75 @@
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 import {
-  UserAccountCreateArgs,
-  userAccountCreateArgsBeet,
-} from '../types/UserAccountCreateArgs'
+  UserAccountDepositArgs,
+  userAccountDepositArgsBeet,
+} from '../types/UserAccountDepositArgs'
 
 /**
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountDeposit
  * @category generated
  */
-export type UserAccountCreateInstructionArgs = {
-  userAccountCreateArgs: UserAccountCreateArgs
+export type UserAccountDepositInstructionArgs = {
+  userAccountDepositArgs: UserAccountDepositArgs
 }
 /**
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountDeposit
  * @category generated
  */
-export const UserAccountCreateStruct = new beet.FixableBeetArgsStruct<
-  UserAccountCreateInstructionArgs & {
+export const UserAccountDepositStruct = new beet.BeetArgsStruct<
+  UserAccountDepositInstructionArgs & {
     instructionDiscriminator: number
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['userAccountCreateArgs', userAccountCreateArgsBeet],
+    ['userAccountDepositArgs', userAccountDepositArgsBeet],
   ],
-  'UserAccountCreateInstructionArgs'
+  'UserAccountDepositInstructionArgs'
 )
 /**
- * Accounts required by the _UserAccountCreate_ instruction
+ * Accounts required by the _UserAccountDeposit_ instruction
  *
- * @property [_writable_, **signer**] userWalletAccount User Wallet Account
+ * @property [_writable_, **signer**] depositor The account to transfer lamports from
  * @property [_writable_] userAccount User Betting Account
  * @property [_writable_] statsPda Stats PDA Account
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountDeposit
  * @category generated
  */
-export type UserAccountCreateInstructionAccounts = {
-  userWalletAccount: web3.PublicKey
+export type UserAccountDepositInstructionAccounts = {
+  depositor: web3.PublicKey
   userAccount: web3.PublicKey
   statsPda: web3.PublicKey
   systemProgram?: web3.PublicKey
 }
 
-export const userAccountCreateInstructionDiscriminator = 1
+export const userAccountDepositInstructionDiscriminator = 2
 
 /**
- * Creates a _UserAccountCreate_ instruction.
+ * Creates a _UserAccountDeposit_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountDeposit
  * @category generated
  */
-export function createUserAccountCreateInstruction(
-  accounts: UserAccountCreateInstructionAccounts,
-  args: UserAccountCreateInstructionArgs,
+export function createUserAccountDepositInstruction(
+  accounts: UserAccountDepositInstructionAccounts,
+  args: UserAccountDepositInstructionArgs,
   programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
 ) {
-  const [data] = UserAccountCreateStruct.serialize({
-    instructionDiscriminator: userAccountCreateInstructionDiscriminator,
+  const [data] = UserAccountDepositStruct.serialize({
+    instructionDiscriminator: userAccountDepositInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.userWalletAccount,
+      pubkey: accounts.depositor,
       isWritable: true,
       isSigner: true,
     },

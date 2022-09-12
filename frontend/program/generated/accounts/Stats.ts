@@ -25,6 +25,8 @@ export type StatsArgs = {
   totalBets: number
   totalWager: beet.bignum
   totalLamportsWonByBettors: beet.bignum
+  totalLamportsDeposited: beet.bignum
+  totalLamportsWithdrew: beet.bignum
 }
 /**
  * Holds the data for the {@link Stats} Account and provides de/serialization
@@ -40,7 +42,9 @@ export class Stats implements StatsArgs {
     readonly totalUsers: number,
     readonly totalBets: number,
     readonly totalWager: beet.bignum,
-    readonly totalLamportsWonByBettors: beet.bignum
+    readonly totalLamportsWonByBettors: beet.bignum,
+    readonly totalLamportsDeposited: beet.bignum,
+    readonly totalLamportsWithdrew: beet.bignum
   ) {}
 
   /**
@@ -53,7 +57,9 @@ export class Stats implements StatsArgs {
       args.totalUsers,
       args.totalBets,
       args.totalWager,
-      args.totalLamportsWonByBettors
+      args.totalLamportsWonByBettors,
+      args.totalLamportsDeposited,
+      args.totalLamportsWithdrew
     )
   }
 
@@ -189,6 +195,28 @@ export class Stats implements StatsArgs {
         }
         return x
       })(),
+      totalLamportsDeposited: (() => {
+        const x = <{ toNumber: () => number }>this.totalLamportsDeposited
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      totalLamportsWithdrew: (() => {
+        const x = <{ toNumber: () => number }>this.totalLamportsWithdrew
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
     }
   }
 }
@@ -205,6 +233,8 @@ export const statsBeet = new beet.BeetStruct<Stats, StatsArgs>(
     ['totalBets', beet.u32],
     ['totalWager', beet.u64],
     ['totalLamportsWonByBettors', beet.u64],
+    ['totalLamportsDeposited', beet.u64],
+    ['totalLamportsWithdrew', beet.u64],
   ],
   Stats.fromArgs,
   'Stats'

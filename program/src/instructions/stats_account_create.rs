@@ -117,5 +117,7 @@ mod test {
         assert_eq!(stats_state.total_bets, 0);
         assert_eq!(stats_state.total_wager, 0);
         assert_eq!(stats_state.total_lamports_won_by_bettors, 0);
+        assert_eq!(stats_state.total_lamports_deposited, 0);
+        assert_eq!(stats_state.total_lamports_withdrew, 0);
     }
 }

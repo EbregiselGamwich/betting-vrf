@@ -187,6 +187,29 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * UserAccountNotSettled: 'UserAccountNotSettled'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UserAccountNotSettledError extends Error {
+  readonly code: number = 0x8
+  readonly name: string = 'UserAccountNotSettled'
+  constructor() {
+    super('UserAccountNotSettled')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UserAccountNotSettledError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x8, () => new UserAccountNotSettledError())
+createErrorFromNameLookup.set(
+  'UserAccountNotSettled',
+  () => new UserAccountNotSettledError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

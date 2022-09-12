@@ -24,6 +24,8 @@ pub enum BettingError {
     VrfResultNotFullfilled,
     #[error("VrfResultAlreadyUsed")]
     VrfResultAlreadyUsed,
+    #[error("UserAccountNotSettled")]
+    UserAccountNotSettled,
 }
 impl PrintProgramError for BettingError {
     fn print<E>(&self)

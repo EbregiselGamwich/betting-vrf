@@ -5,72 +5,65 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category MintCreate
+ * @category UserAccountClose
  * @category generated
  */
-export const MintCreateStruct = new beet.BeetArgsStruct<{
+export const UserAccountCloseStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number
-}>([['instructionDiscriminator', beet.u8]], 'MintCreateInstructionArgs')
+}>([['instructionDiscriminator', beet.u8]], 'UserAccountCloseInstructionArgs')
 /**
- * Accounts required by the _MintCreate_ instruction
+ * Accounts required by the _UserAccountClose_ instruction
  *
- * @property [_writable_, **signer**] operator Operator Account
- * @property [_writable_] mintAccount Mint Account
- * @property [] statsPda Stats PDA Account
+ * @property [_writable_, **signer**] userWalletAccount User Wallet Account
+ * @property [_writable_] userAccount User Betting Account
+ * @property [_writable_] statsPda Stats PDA Account
  * @category Instructions
- * @category MintCreate
+ * @category UserAccountClose
  * @category generated
  */
-export type MintCreateInstructionAccounts = {
-  operator: web3.PublicKey
-  mintAccount: web3.PublicKey
+export type UserAccountCloseInstructionAccounts = {
+  userWalletAccount: web3.PublicKey
+  userAccount: web3.PublicKey
   statsPda: web3.PublicKey
-  tokenProgram?: web3.PublicKey
   systemProgram?: web3.PublicKey
 }
 
-export const mintCreateInstructionDiscriminator = 1
+export const userAccountCloseInstructionDiscriminator = 4
 
 /**
- * Creates a _MintCreate_ instruction.
+ * Creates a _UserAccountClose_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category MintCreate
+ * @category UserAccountClose
  * @category generated
  */
-export function createMintCreateInstruction(
-  accounts: MintCreateInstructionAccounts,
+export function createUserAccountCloseInstruction(
+  accounts: UserAccountCloseInstructionAccounts,
   programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
 ) {
-  const [data] = MintCreateStruct.serialize({
-    instructionDiscriminator: mintCreateInstructionDiscriminator,
+  const [data] = UserAccountCloseStruct.serialize({
+    instructionDiscriminator: userAccountCloseInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.operator,
+      pubkey: accounts.userWalletAccount,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: accounts.mintAccount,
+      pubkey: accounts.userAccount,
       isWritable: true,
       isSigner: false,
     },
     {
       pubkey: accounts.statsPda,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

@@ -23,7 +23,10 @@ export type UserAccountArgs = {
   authority: web3.PublicKey
   totalBets: number
   currentLamports: beet.bignum
+  lamportsDeposited: beet.bignum
+  lamportsWithdrew: beet.bignum
   activeVrfResults: number
+  gamesHosted: number
   referral: beet.COption<web3.PublicKey>
   username: beet.COption<string>
 }
@@ -40,7 +43,10 @@ export class UserAccount implements UserAccountArgs {
     readonly authority: web3.PublicKey,
     readonly totalBets: number,
     readonly currentLamports: beet.bignum,
+    readonly lamportsDeposited: beet.bignum,
+    readonly lamportsWithdrew: beet.bignum,
     readonly activeVrfResults: number,
+    readonly gamesHosted: number,
     readonly referral: beet.COption<web3.PublicKey>,
     readonly username: beet.COption<string>
   ) {}
@@ -54,7 +60,10 @@ export class UserAccount implements UserAccountArgs {
       args.authority,
       args.totalBets,
       args.currentLamports,
+      args.lamportsDeposited,
+      args.lamportsWithdrew,
       args.activeVrfResults,
+      args.gamesHosted,
       args.referral,
       args.username
     )
@@ -169,7 +178,30 @@ export class UserAccount implements UserAccountArgs {
         }
         return x
       })(),
+      lamportsDeposited: (() => {
+        const x = <{ toNumber: () => number }>this.lamportsDeposited
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      lamportsWithdrew: (() => {
+        const x = <{ toNumber: () => number }>this.lamportsWithdrew
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
       activeVrfResults: this.activeVrfResults,
+      gamesHosted: this.gamesHosted,
       referral: this.referral,
       username: this.username,
     }
@@ -189,7 +221,10 @@ export const userAccountBeet = new beet.FixableBeetStruct<
     ['authority', beetSolana.publicKey],
     ['totalBets', beet.u32],
     ['currentLamports', beet.u64],
+    ['lamportsDeposited', beet.u64],
+    ['lamportsWithdrew', beet.u64],
     ['activeVrfResults', beet.u32],
+    ['gamesHosted', beet.u32],
     ['referral', beet.coption(beetSolana.publicKey)],
     ['username', beet.coption(beet.utf8String)],
   ],

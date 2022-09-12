@@ -8,70 +8,73 @@
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
 import {
-  UserAccountCreateArgs,
-  userAccountCreateArgsBeet,
-} from '../types/UserAccountCreateArgs'
+  UserAccountWithdrawArgs,
+  userAccountWithdrawArgsBeet,
+} from '../types/UserAccountWithdrawArgs'
 
 /**
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountWithdraw
  * @category generated
  */
-export type UserAccountCreateInstructionArgs = {
-  userAccountCreateArgs: UserAccountCreateArgs
+export type UserAccountWithdrawInstructionArgs = {
+  userAccountWithdrawArgs: UserAccountWithdrawArgs
 }
 /**
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountWithdraw
  * @category generated
  */
-export const UserAccountCreateStruct = new beet.FixableBeetArgsStruct<
-  UserAccountCreateInstructionArgs & {
+export const UserAccountWithdrawStruct = new beet.BeetArgsStruct<
+  UserAccountWithdrawInstructionArgs & {
     instructionDiscriminator: number
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['userAccountCreateArgs', userAccountCreateArgsBeet],
+    ['userAccountWithdrawArgs', userAccountWithdrawArgsBeet],
   ],
-  'UserAccountCreateInstructionArgs'
+  'UserAccountWithdrawInstructionArgs'
 )
 /**
- * Accounts required by the _UserAccountCreate_ instruction
+ * Accounts required by the _UserAccountWithdraw_ instruction
  *
  * @property [_writable_, **signer**] userWalletAccount User Wallet Account
  * @property [_writable_] userAccount User Betting Account
  * @property [_writable_] statsPda Stats PDA Account
+ * @property [_writable_] operator Operator Account
+ * @property [_writable_] referallAccount (optional) Referral Wallet Account
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountWithdraw
  * @category generated
  */
-export type UserAccountCreateInstructionAccounts = {
+export type UserAccountWithdrawInstructionAccounts = {
   userWalletAccount: web3.PublicKey
   userAccount: web3.PublicKey
   statsPda: web3.PublicKey
-  systemProgram?: web3.PublicKey
+  operator: web3.PublicKey
+  referallAccount?: web3.PublicKey
 }
 
-export const userAccountCreateInstructionDiscriminator = 1
+export const userAccountWithdrawInstructionDiscriminator = 3
 
 /**
- * Creates a _UserAccountCreate_ instruction.
+ * Creates a _UserAccountWithdraw_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category UserAccountCreate
+ * @category UserAccountWithdraw
  * @category generated
  */
-export function createUserAccountCreateInstruction(
-  accounts: UserAccountCreateInstructionAccounts,
-  args: UserAccountCreateInstructionArgs,
+export function createUserAccountWithdrawInstruction(
+  accounts: UserAccountWithdrawInstructionAccounts,
+  args: UserAccountWithdrawInstructionArgs,
   programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
 ) {
-  const [data] = UserAccountCreateStruct.serialize({
-    instructionDiscriminator: userAccountCreateInstructionDiscriminator,
+  const [data] = UserAccountWithdrawStruct.serialize({
+    instructionDiscriminator: userAccountWithdrawInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
@@ -91,11 +94,19 @@ export function createUserAccountCreateInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
+      pubkey: accounts.operator,
+      isWritable: true,
       isSigner: false,
     },
   ]
+
+  if (accounts.referallAccount != null) {
+    keys.push({
+      pubkey: accounts.referallAccount,
+      isWritable: true,
+      isSigner: false,
+    })
+  }
 
   const ix = new web3.TransactionInstruction({
     programId,

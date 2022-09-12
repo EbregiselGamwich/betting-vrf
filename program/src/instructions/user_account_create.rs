@@ -152,6 +152,8 @@ mod test {
         assert_eq!(user_account_state.current_lamports, 0);
         assert_eq!(user_account_state.active_vrf_results, 0);
         assert_eq!(user_account_state.referral, Some(referral));
-        assert_eq!(user_account_state.username, Some("Username".to_string()))
+        assert_eq!(user_account_state.username, Some("Username".to_string()));
+        assert_eq!(user_account_state.lamports_deposited, 0);
+        assert_eq!(user_account_state.lamports_withdrew, 0);
     }
 }
