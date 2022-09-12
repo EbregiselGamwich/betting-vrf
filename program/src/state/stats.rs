@@ -11,6 +11,7 @@ pub struct Stats {
     pub total_bets: u32,
     pub total_wager: u64,
     pub total_lamports_won_by_bettors: u64,
+    pub total_lamports_deposited: u64,
 }
 impl Stats {
     pub fn new() -> Self {
@@ -21,6 +22,7 @@ impl Stats {
             total_wager: 0,
             total_lamports_won_by_bettors: 0,
             total_users: 0,
+            total_lamports_deposited: 0,
         }
     }
 }

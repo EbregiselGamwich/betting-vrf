@@ -1,11 +1,14 @@
 pub mod mint_create;
 pub mod stats_account_create;
+pub mod user_account_close;
 pub mod user_account_create;
+pub mod user_account_deposit;
+pub mod user_account_withdraw;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 
-use self::user_account_create::UserAccountCreateArgs;
+use self::{user_account_create::UserAccountCreateArgs, user_account_deposit::UserAccountDepositArgs};
 
 #[derive(BorshSerialize, BorshDeserialize, ShankInstruction, Clone)]
 pub enum BettingInstruction {
@@ -24,4 +27,9 @@ pub enum BettingInstruction {
     #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
     #[account(3, name = "system_program", desc = "System Program Account")]
     UserAccountCreate { args: UserAccountCreateArgs },
+    #[account(0, writable, signer, name = "depositor", desc = "The account to transfer lamports from")]
+    #[account(1, writable, name = "user_account", desc = "User Betting Account")]
+    #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
+    #[account(3, name = "system_program", desc = "System Program Account")]
+    UserAccountDeposit { args: UserAccountDepositArgs },
 }

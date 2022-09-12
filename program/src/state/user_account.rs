@@ -11,6 +11,7 @@ pub struct UserAccount {
     pub total_bets: u32,
     pub current_lamports: u64,
     pub active_vrf_results: u32,
+    pub games_hosted: u32,
     pub referral: Option<Pubkey>,
     pub username: Option<String>,
 }
@@ -23,6 +24,7 @@ impl UserAccount {
             total_bets: 0,
             current_lamports: 0,
             active_vrf_results: 0,
+            games_hosted: 0,
             referral,
             username,
         }
