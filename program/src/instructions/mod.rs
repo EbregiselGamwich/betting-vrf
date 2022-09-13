@@ -1,3 +1,4 @@
+pub mod game_create;
 pub mod stats_account_create;
 pub mod user_account_close;
 pub mod user_account_create;
@@ -7,7 +8,10 @@ pub mod user_account_withdraw;
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 
-use self::{user_account_create::UserAccountCreateArgs, user_account_deposit::UserAccountDepositArgs, user_account_withdraw::UserAccountWithdrawArgs};
+use self::{
+    game_create::GameCreateArgs, user_account_create::UserAccountCreateArgs, user_account_deposit::UserAccountDepositArgs,
+    user_account_withdraw::UserAccountWithdrawArgs,
+};
 
 #[derive(BorshSerialize, BorshDeserialize, ShankInstruction, Clone)]
 pub enum BettingInstruction {
@@ -36,4 +40,10 @@ pub enum BettingInstruction {
     #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
     #[account(3, name = "system_program", desc = "System Program Account")]
     UserAccountClose,
+    #[account(0, writable, signer, name = "host", desc = "The wallet account of the host")]
+    #[account(1, writable, name = "user_account", desc = "User Betting Account of the host")]
+    #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
+    #[account(3, writable, name = "game_pda", desc = "Game PDA Account")]
+    #[account(4, name = "system_program", desc = "System Program Account")]
+    GameCreate { args: GameCreateArgs },
 }

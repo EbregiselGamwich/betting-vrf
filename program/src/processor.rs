@@ -1,7 +1,7 @@
-use crate::instructions::stats_account_create::stats_account_create;
 use crate::instructions::user_account_close::user_account_close;
 use crate::instructions::user_account_deposit::user_account_deposit;
 use crate::instructions::user_account_withdraw::user_account_withdraw;
+use crate::instructions::{game_create::game_create, stats_account_create::stats_account_create};
 use crate::instructions::{user_account_create::user_account_create, BettingInstruction};
 use borsh::BorshDeserialize;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
@@ -16,6 +16,7 @@ impl Processor {
             BettingInstruction::UserAccountDeposit { args } => user_account_deposit(program_id, accounts, args),
             BettingInstruction::UserAccountWithdraw { args } => user_account_withdraw(program_id, accounts, args),
             BettingInstruction::UserAccountClose => user_account_close(program_id, accounts),
+            BettingInstruction::GameCreate { args } => game_create(program_id, accounts, args),
         }
     }
 }

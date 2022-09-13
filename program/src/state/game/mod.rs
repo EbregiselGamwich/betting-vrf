@@ -41,7 +41,7 @@ impl Game {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Copy)]
 pub struct CommonGameConfig {
     pub min_wager: u64,
     pub max_wager: u64,

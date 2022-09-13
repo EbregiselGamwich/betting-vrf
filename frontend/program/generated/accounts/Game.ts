@@ -12,6 +12,10 @@ import {
   StateAccountType,
   stateAccountTypeBeet,
 } from '../types/StateAccountType'
+import {
+  CommonGameConfig,
+  commonGameConfigBeet,
+} from '../types/CommonGameConfig'
 import { GameTypeConfig, gameTypeConfigBeet } from '../types/GameTypeConfig'
 
 /**
@@ -26,8 +30,7 @@ export type GameArgs = {
   unresolvedVrfResult: number
   totalLamportsIn: beet.bignum
   totalLamportsOut: beet.bignum
-  minWager: beet.bignum
-  maxWager: beet.bignum
+  commonConfig: CommonGameConfig
   gameTypeConfig: GameTypeConfig
 }
 /**
@@ -45,8 +48,7 @@ export class Game implements GameArgs {
     readonly unresolvedVrfResult: number,
     readonly totalLamportsIn: beet.bignum,
     readonly totalLamportsOut: beet.bignum,
-    readonly minWager: beet.bignum,
-    readonly maxWager: beet.bignum,
+    readonly commonConfig: CommonGameConfig,
     readonly gameTypeConfig: GameTypeConfig
   ) {}
 
@@ -61,8 +63,7 @@ export class Game implements GameArgs {
       args.unresolvedVrfResult,
       args.totalLamportsIn,
       args.totalLamportsOut,
-      args.minWager,
-      args.maxWager,
+      args.commonConfig,
       args.gameTypeConfig
     )
   }
@@ -188,28 +189,7 @@ export class Game implements GameArgs {
         }
         return x
       })(),
-      minWager: (() => {
-        const x = <{ toNumber: () => number }>this.minWager
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber()
-          } catch (_) {
-            return x
-          }
-        }
-        return x
-      })(),
-      maxWager: (() => {
-        const x = <{ toNumber: () => number }>this.maxWager
-        if (typeof x.toNumber === 'function') {
-          try {
-            return x.toNumber()
-          } catch (_) {
-            return x
-          }
-        }
-        return x
-      })(),
+      commonConfig: this.commonConfig,
       gameTypeConfig: this.gameTypeConfig.__kind,
     }
   }
@@ -227,8 +207,7 @@ export const gameBeet = new beet.FixableBeetStruct<Game, GameArgs>(
     ['unresolvedVrfResult', beet.u32],
     ['totalLamportsIn', beet.u64],
     ['totalLamportsOut', beet.u64],
-    ['minWager', beet.u64],
-    ['maxWager', beet.u64],
+    ['commonConfig', commonGameConfigBeet],
     ['gameTypeConfig', gameTypeConfigBeet],
   ],
   Game.fromArgs,

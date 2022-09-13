@@ -1,3 +1,4 @@
+export * from './GameCreate'
 export * from './StatsAccountCreate'
 export * from './UserAccountClose'
 export * from './UserAccountCreate'
