@@ -22,8 +22,7 @@ pub struct Game {
     pub unresolved_vrf_result: u32,
     pub total_lamports_in: u64,
     pub total_lamports_out: u64,
-    pub min_wager: u64,
-    pub max_wager: u64,
+    pub common_config: CommonGameConfig,
     pub game_type_config: GameTypeConfig,
 }
 
@@ -36,11 +35,16 @@ impl Game {
             unresolved_vrf_result: 0,
             total_lamports_in: 0,
             total_lamports_out: 0,
-            min_wager,
-            max_wager,
+            common_config: CommonGameConfig { min_wager, max_wager },
             game_type_config,
         }
     }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone)]
+pub struct CommonGameConfig {
+    pub min_wager: u64,
+    pub max_wager: u64,
 }
 #[derive(BorshSerialize, BorshDeserialize, Clone, Copy)]
 pub enum GameTypeConfig {

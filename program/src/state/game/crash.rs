@@ -17,7 +17,10 @@ pub struct CrashInput {
 
 impl CheckBetInput for CrashInput {
     fn check_bet_input(&self, game: &Game) -> Result<(), ProgramError> {
-        if !matches!(game.game_type_config, GameTypeConfig::Crash { .. }) || self.wager < game.min_wager || self.wager > game.max_wager {
+        if !matches!(game.game_type_config, GameTypeConfig::Crash { .. })
+            || self.wager < game.common_config.min_wager
+            || self.wager > game.common_config.max_wager
+        {
             Err(ProgramError::InvalidArgument)
         } else {
             Ok(())

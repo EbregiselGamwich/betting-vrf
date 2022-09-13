@@ -26,7 +26,10 @@ pub enum CoinFlipSide {
 
 impl CheckBetInput for CoinFlipInput {
     fn check_bet_input(&self, game: &Game) -> Result<(), program_error::ProgramError> {
-        if !matches!(game.game_type_config, GameTypeConfig::CoinFlip { .. }) || self.wager < game.min_wager || self.wager > game.max_wager {
+        if !matches!(game.game_type_config, GameTypeConfig::CoinFlip { .. })
+            || self.wager < game.common_config.min_wager
+            || self.wager > game.common_config.max_wager
+        {
             Err(ProgramError::InvalidArgument)
         } else {
             Ok(())
