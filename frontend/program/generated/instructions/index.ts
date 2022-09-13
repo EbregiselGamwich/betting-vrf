@@ -1,4 +1,5 @@
 export * from './GameCreate'
+export * from './GameSetActive'
 export * from './StatsAccountCreate'
 export * from './UserAccountClose'
 export * from './UserAccountCreate'

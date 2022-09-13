@@ -9,7 +9,7 @@ use self::{
     crash::{CrashConfig, CrashInput},
 };
 
-use super::{vrf_result::VrfResult, StateAccountType};
+use super::{vrf_result::VrfResult, BettingAccount, StateAccountType};
 
 pub mod coinflip;
 pub mod crash;
@@ -39,6 +39,9 @@ impl Game {
             game_type_config,
         }
     }
+}
+impl BettingAccount for Game {
+    const ACCOUNT_TYPE: StateAccountType = StateAccountType::Game;
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Copy)]
