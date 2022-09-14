@@ -18,7 +18,7 @@ pub struct CoinFlipInput {
     pub side: CoinFlipSide,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub enum CoinFlipSide {
     Head,
     Tail,

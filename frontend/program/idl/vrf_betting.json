@@ -269,6 +269,71 @@
         "type": "u8",
         "value": 6
       }
+    },
+    {
+      "name": "GamePlaceBet",
+      "accounts": [
+        {
+          "name": "bettor",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Bettor wallet account"
+        },
+        {
+          "name": "bettorUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Bettor user account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "gamePda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Game PDA Account"
+        },
+        {
+          "name": "hostUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Host user account"
+        },
+        {
+          "name": "vrfResultPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "VRF result PDA account"
+        },
+        {
+          "name": "slotHashes",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Slot hashes account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [
+        {
+          "name": "gamePlaceBetArgs",
+          "type": {
+            "defined": "GamePlaceBetArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
     }
   ],
   "accounts": [
@@ -477,6 +542,14 @@
             }
           },
           {
+            "name": "lockedBettorLamports",
+            "type": "u64"
+          },
+          {
+            "name": "lockedHostLamports",
+            "type": "u64"
+          },
+          {
             "name": "betInput",
             "type": {
               "defined": "BetInput"
@@ -580,6 +653,20 @@
             "name": "gameTypeConfig",
             "type": {
               "defined": "GameTypeConfig"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "GamePlaceBetArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "betInput",
+            "type": {
+              "defined": "BetInput"
             }
           }
         ]
@@ -784,6 +871,11 @@
       "code": 8,
       "name": "UserAccountNotSettled",
       "msg": "UserAccountNotSettled"
+    },
+    {
+      "code": 9,
+      "name": "GameNotActive",
+      "msg": "GameNotActive"
     }
   ],
   "metadata": {

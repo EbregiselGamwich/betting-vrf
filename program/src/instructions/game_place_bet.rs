@@ -159,3 +159,863 @@ pub fn game_place_bet(program_id: &Pubkey, accounts: &[AccountInfo], args: GameP
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use borsh::BorshSerialize;
+    use solana_program::{
+        instruction::{AccountMeta, Instruction},
+        native_token::LAMPORTS_PER_SOL,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_program, sysvar,
+    };
+    use solana_program_test::{tokio, ProgramTest};
+    use solana_sdk::{account::Account, signature::Keypair, signer::Signer, transaction::Transaction};
+
+    use crate::{
+        instructions::BettingInstruction,
+        state::{
+            game::{
+                coinflip::{CoinFlipConfig, CoinFlipInput, CoinFlipSide},
+                BetInput, Game, GameTypeConfig,
+            },
+            stats::Stats,
+            user_account::UserAccount,
+            vrf_result::VrfResult,
+            StateAccountType,
+        },
+    };
+
+    use super::GamePlaceBetArgs;
+
+    #[tokio::test]
+    async fn test_game_place_bet_success() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let bettor = Keypair::new();
+        program_test.add_account(
+            bettor.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let referral = Pubkey::new_unique();
+        let (bettor_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), bettor.pubkey().as_ref()], &program_id);
+        let mut bettor_user_account_state = UserAccount::new(bettor.pubkey(), Some(referral), Some("Bettor".to_string()));
+        bettor_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let bettor_user_account_data = bettor_user_account_state.try_to_vec().unwrap();
+        let bettor_user_account_data_len = bettor_user_account_data.len();
+        program_test.add_account(
+            bettor_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(bettor_user_account_data_len),
+                data: bettor_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (stats_pda, _) = Pubkey::find_program_address(&[b"Stats".as_ref()], &program_id);
+        let mut stats_state = Stats::new();
+        stats_state.total_users = 1;
+        stats_state.total_games = 1;
+        let stats_data = stats_state.try_to_vec().unwrap();
+        let stats_data_len = stats_data.len();
+        program_test.add_account(
+            stats_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(stats_data_len),
+                data: stats_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let host = Pubkey::new_unique();
+        let (host_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), host.as_ref()], &program_id);
+        let mut host_user_account_state = UserAccount::new(host, None, None);
+        host_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let host_user_account_data = host_user_account_state.try_to_vec().unwrap();
+        let host_user_account_data_len = host_user_account_data.len();
+        program_test.add_account(
+            host_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(host_user_account_data_len),
+                data: host_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let game_state = Game::new(
+            host,
+            1000,
+            10000,
+            GameTypeConfig::CoinFlip {
+                config: CoinFlipConfig {
+                    host_probability_advantage: 100,
+                    payout_rate: 9900,
+                },
+            },
+        );
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (vrf_result_pda, _) = Pubkey::find_program_address(
+            &[
+                b"VrfResult".as_ref(),
+                game_pda.as_ref(),
+                bettor.pubkey().as_ref(),
+                &bettor_user_account_state.total_bets.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GamePlaceBet {
+                    args: GamePlaceBetArgs {
+                        bet_input: BetInput::CoinFlip {
+                            input: CoinFlipInput {
+                                wager: 2000,
+                                side: CoinFlipSide::Head,
+                            },
+                        },
+                    },
+                },
+                vec![
+                    AccountMeta::new(bettor.pubkey(), true),
+                    AccountMeta::new(bettor_user_account_pda, false),
+                    AccountMeta::new(stats_pda, false),
+                    AccountMeta::new(game_pda, false),
+                    AccountMeta::new(host_user_account_pda, false),
+                    AccountMeta::new(vrf_result_pda, false),
+                    AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+                    AccountMeta::new_readonly(system_program::id(), false),
+                ],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&bettor, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+        // the bettor user account should be updated
+        let bettor_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(bettor_user_account_pda).await.unwrap();
+        assert_eq!(bettor_user_account_state.total_bets, 1);
+        assert_eq!(bettor_user_account_state.active_vrf_results, 1);
+        assert_eq!(bettor_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000);
+        // the stats account should be updated
+        let stats_state: Stats = banks_client.get_account_data_with_borsh(stats_pda).await.unwrap();
+        assert_eq!(stats_state.total_bets, 1);
+        assert_eq!(stats_state.total_wager, 2000);
+        // the game account should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert_eq!(game_state.unresolved_vrf_result, 1);
+        assert_eq!(game_state.total_lamports_in, 2000);
+        // the host user account should be updated
+        let host_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(host_user_account_pda).await.unwrap();
+        assert_eq!(host_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000 * 9900 / 10000);
+        // the vrf result account should be created
+        let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
+        assert_eq!(vrf_result_state.account_type, StateAccountType::Vrf);
+        assert!(!vrf_result_state.is_fullfilled);
+        assert!(!vrf_result_state.is_used);
+        assert!(!vrf_result_state.marked_for_close);
+        assert_eq!(vrf_result_state.owner, bettor.pubkey());
+        assert_eq!(vrf_result_state.game, game_pda);
+        assert_eq!(vrf_result_state.bet_id, 0);
+        assert_eq!(&vrf_result_state.alpha[8..40], bettor.pubkey().as_ref());
+        assert_eq!(vrf_result_state.beta, [0; 64]);
+        assert_eq!(vrf_result_state.pi, [0; 80]);
+        assert_eq!(vrf_result_state.locked_bettor_lamports, 2000);
+        assert_eq!(vrf_result_state.locked_host_lamports, 2000 * 9900 / 10000);
+        if let BetInput::CoinFlip { input } = vrf_result_state.bet_input {
+            assert_eq!(input.wager, 2000);
+            assert_eq!(input.side, CoinFlipSide::Head);
+        } else {
+            panic!()
+        }
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "Custom(9)")]
+    async fn test_game_place_bet_err_game_not_active() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let bettor = Keypair::new();
+        program_test.add_account(
+            bettor.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let referral = Pubkey::new_unique();
+        let (bettor_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), bettor.pubkey().as_ref()], &program_id);
+        let mut bettor_user_account_state = UserAccount::new(bettor.pubkey(), Some(referral), Some("Bettor".to_string()));
+        bettor_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let bettor_user_account_data = bettor_user_account_state.try_to_vec().unwrap();
+        let bettor_user_account_data_len = bettor_user_account_data.len();
+        program_test.add_account(
+            bettor_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(bettor_user_account_data_len),
+                data: bettor_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (stats_pda, _) = Pubkey::find_program_address(&[b"Stats".as_ref()], &program_id);
+        let mut stats_state = Stats::new();
+        stats_state.total_users = 1;
+        stats_state.total_games = 1;
+        let stats_data = stats_state.try_to_vec().unwrap();
+        let stats_data_len = stats_data.len();
+        program_test.add_account(
+            stats_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(stats_data_len),
+                data: stats_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let host = Pubkey::new_unique();
+        let (host_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), host.as_ref()], &program_id);
+        let mut host_user_account_state = UserAccount::new(host, None, None);
+        host_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let host_user_account_data = host_user_account_state.try_to_vec().unwrap();
+        let host_user_account_data_len = host_user_account_data.len();
+        program_test.add_account(
+            host_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(host_user_account_data_len),
+                data: host_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let mut game_state = Game::new(
+            host,
+            1000,
+            10000,
+            GameTypeConfig::CoinFlip {
+                config: CoinFlipConfig {
+                    host_probability_advantage: 100,
+                    payout_rate: 9900,
+                },
+            },
+        );
+        game_state.is_active = false;
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (vrf_result_pda, _) = Pubkey::find_program_address(
+            &[
+                b"VrfResult".as_ref(),
+                game_pda.as_ref(),
+                bettor.pubkey().as_ref(),
+                &bettor_user_account_state.total_bets.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GamePlaceBet {
+                    args: GamePlaceBetArgs {
+                        bet_input: BetInput::CoinFlip {
+                            input: CoinFlipInput {
+                                wager: 2000,
+                                side: CoinFlipSide::Head,
+                            },
+                        },
+                    },
+                },
+                vec![
+                    AccountMeta::new(bettor.pubkey(), true),
+                    AccountMeta::new(bettor_user_account_pda, false),
+                    AccountMeta::new(stats_pda, false),
+                    AccountMeta::new(game_pda, false),
+                    AccountMeta::new(host_user_account_pda, false),
+                    AccountMeta::new(vrf_result_pda, false),
+                    AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+                    AccountMeta::new_readonly(system_program::id(), false),
+                ],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&bettor, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+        // the bettor user account should be updated
+        let bettor_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(bettor_user_account_pda).await.unwrap();
+        assert_eq!(bettor_user_account_state.total_bets, 1);
+        assert_eq!(bettor_user_account_state.active_vrf_results, 1);
+        assert_eq!(bettor_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000);
+        // the stats account should be updated
+        let stats_state: Stats = banks_client.get_account_data_with_borsh(stats_pda).await.unwrap();
+        assert_eq!(stats_state.total_bets, 1);
+        assert_eq!(stats_state.total_wager, 2000);
+        // the game account should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert_eq!(game_state.unresolved_vrf_result, 1);
+        assert_eq!(game_state.total_lamports_in, 2000);
+        // the host user account should be updated
+        let host_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(host_user_account_pda).await.unwrap();
+        assert_eq!(host_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000 * 9900 / 10000);
+        // the vrf result account should be created
+        let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
+        assert_eq!(vrf_result_state.account_type, StateAccountType::Vrf);
+        assert!(!vrf_result_state.is_fullfilled);
+        assert!(!vrf_result_state.is_used);
+        assert!(!vrf_result_state.marked_for_close);
+        assert_eq!(vrf_result_state.owner, bettor.pubkey());
+        assert_eq!(vrf_result_state.game, game_pda);
+        assert_eq!(vrf_result_state.bet_id, 0);
+        assert_eq!(&vrf_result_state.alpha[8..40], bettor.pubkey().as_ref());
+        assert_eq!(vrf_result_state.beta, [0; 64]);
+        assert_eq!(vrf_result_state.pi, [0; 80]);
+        assert_eq!(vrf_result_state.locked_bettor_lamports, 2000);
+        assert_eq!(vrf_result_state.locked_host_lamports, 2000 * 9900 / 10000);
+        if let BetInput::CoinFlip { input } = vrf_result_state.bet_input {
+            assert_eq!(input.wager, 2000);
+            assert_eq!(input.side, CoinFlipSide::Head);
+        } else {
+            panic!()
+        }
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "InvalidArgument")]
+    async fn test_game_place_bet_err_invalid_bet_input() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let bettor = Keypair::new();
+        program_test.add_account(
+            bettor.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let referral = Pubkey::new_unique();
+        let (bettor_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), bettor.pubkey().as_ref()], &program_id);
+        let mut bettor_user_account_state = UserAccount::new(bettor.pubkey(), Some(referral), Some("Bettor".to_string()));
+        bettor_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let bettor_user_account_data = bettor_user_account_state.try_to_vec().unwrap();
+        let bettor_user_account_data_len = bettor_user_account_data.len();
+        program_test.add_account(
+            bettor_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(bettor_user_account_data_len),
+                data: bettor_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (stats_pda, _) = Pubkey::find_program_address(&[b"Stats".as_ref()], &program_id);
+        let mut stats_state = Stats::new();
+        stats_state.total_users = 1;
+        stats_state.total_games = 1;
+        let stats_data = stats_state.try_to_vec().unwrap();
+        let stats_data_len = stats_data.len();
+        program_test.add_account(
+            stats_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(stats_data_len),
+                data: stats_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let host = Pubkey::new_unique();
+        let (host_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), host.as_ref()], &program_id);
+        let mut host_user_account_state = UserAccount::new(host, None, None);
+        host_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let host_user_account_data = host_user_account_state.try_to_vec().unwrap();
+        let host_user_account_data_len = host_user_account_data.len();
+        program_test.add_account(
+            host_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(host_user_account_data_len),
+                data: host_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let game_state = Game::new(
+            host,
+            1000,
+            10000,
+            GameTypeConfig::CoinFlip {
+                config: CoinFlipConfig {
+                    host_probability_advantage: 100,
+                    payout_rate: 9900,
+                },
+            },
+        );
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (vrf_result_pda, _) = Pubkey::find_program_address(
+            &[
+                b"VrfResult".as_ref(),
+                game_pda.as_ref(),
+                bettor.pubkey().as_ref(),
+                &bettor_user_account_state.total_bets.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GamePlaceBet {
+                    args: GamePlaceBetArgs {
+                        bet_input: BetInput::CoinFlip {
+                            input: CoinFlipInput {
+                                wager: 2000000,
+                                side: CoinFlipSide::Head,
+                            },
+                        },
+                    },
+                },
+                vec![
+                    AccountMeta::new(bettor.pubkey(), true),
+                    AccountMeta::new(bettor_user_account_pda, false),
+                    AccountMeta::new(stats_pda, false),
+                    AccountMeta::new(game_pda, false),
+                    AccountMeta::new(host_user_account_pda, false),
+                    AccountMeta::new(vrf_result_pda, false),
+                    AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+                    AccountMeta::new_readonly(system_program::id(), false),
+                ],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&bettor, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+        // the bettor user account should be updated
+        let bettor_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(bettor_user_account_pda).await.unwrap();
+        assert_eq!(bettor_user_account_state.total_bets, 1);
+        assert_eq!(bettor_user_account_state.active_vrf_results, 1);
+        assert_eq!(bettor_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000);
+        // the stats account should be updated
+        let stats_state: Stats = banks_client.get_account_data_with_borsh(stats_pda).await.unwrap();
+        assert_eq!(stats_state.total_bets, 1);
+        assert_eq!(stats_state.total_wager, 2000);
+        // the game account should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert_eq!(game_state.unresolved_vrf_result, 1);
+        assert_eq!(game_state.total_lamports_in, 2000);
+        // the host user account should be updated
+        let host_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(host_user_account_pda).await.unwrap();
+        assert_eq!(host_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000 * 9900 / 10000);
+        // the vrf result account should be created
+        let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
+        assert_eq!(vrf_result_state.account_type, StateAccountType::Vrf);
+        assert!(!vrf_result_state.is_fullfilled);
+        assert!(!vrf_result_state.is_used);
+        assert!(!vrf_result_state.marked_for_close);
+        assert_eq!(vrf_result_state.owner, bettor.pubkey());
+        assert_eq!(vrf_result_state.game, game_pda);
+        assert_eq!(vrf_result_state.bet_id, 0);
+        assert_eq!(&vrf_result_state.alpha[8..40], bettor.pubkey().as_ref());
+        assert_eq!(vrf_result_state.beta, [0; 64]);
+        assert_eq!(vrf_result_state.pi, [0; 80]);
+        assert_eq!(vrf_result_state.locked_bettor_lamports, 2000);
+        assert_eq!(vrf_result_state.locked_host_lamports, 2000 * 9900 / 10000);
+        if let BetInput::CoinFlip { input } = vrf_result_state.bet_input {
+            assert_eq!(input.wager, 2000);
+            assert_eq!(input.side, CoinFlipSide::Head);
+        } else {
+            panic!()
+        }
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "InsufficientFunds")]
+    async fn test_game_place_bet_err_bettor_not_enough_money() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let bettor = Keypair::new();
+        program_test.add_account(
+            bettor.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let referral = Pubkey::new_unique();
+        let (bettor_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), bettor.pubkey().as_ref()], &program_id);
+        let mut bettor_user_account_state = UserAccount::new(bettor.pubkey(), Some(referral), Some("Bettor".to_string()));
+        bettor_user_account_state.current_lamports = 1;
+        let bettor_user_account_data = bettor_user_account_state.try_to_vec().unwrap();
+        let bettor_user_account_data_len = bettor_user_account_data.len();
+        program_test.add_account(
+            bettor_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(bettor_user_account_data_len),
+                data: bettor_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (stats_pda, _) = Pubkey::find_program_address(&[b"Stats".as_ref()], &program_id);
+        let mut stats_state = Stats::new();
+        stats_state.total_users = 1;
+        stats_state.total_games = 1;
+        let stats_data = stats_state.try_to_vec().unwrap();
+        let stats_data_len = stats_data.len();
+        program_test.add_account(
+            stats_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(stats_data_len),
+                data: stats_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let host = Pubkey::new_unique();
+        let (host_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), host.as_ref()], &program_id);
+        let mut host_user_account_state = UserAccount::new(host, None, None);
+        host_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let host_user_account_data = host_user_account_state.try_to_vec().unwrap();
+        let host_user_account_data_len = host_user_account_data.len();
+        program_test.add_account(
+            host_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(host_user_account_data_len),
+                data: host_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let game_state = Game::new(
+            host,
+            1000,
+            10000,
+            GameTypeConfig::CoinFlip {
+                config: CoinFlipConfig {
+                    host_probability_advantage: 100,
+                    payout_rate: 9900,
+                },
+            },
+        );
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (vrf_result_pda, _) = Pubkey::find_program_address(
+            &[
+                b"VrfResult".as_ref(),
+                game_pda.as_ref(),
+                bettor.pubkey().as_ref(),
+                &bettor_user_account_state.total_bets.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GamePlaceBet {
+                    args: GamePlaceBetArgs {
+                        bet_input: BetInput::CoinFlip {
+                            input: CoinFlipInput {
+                                wager: 2000,
+                                side: CoinFlipSide::Head,
+                            },
+                        },
+                    },
+                },
+                vec![
+                    AccountMeta::new(bettor.pubkey(), true),
+                    AccountMeta::new(bettor_user_account_pda, false),
+                    AccountMeta::new(stats_pda, false),
+                    AccountMeta::new(game_pda, false),
+                    AccountMeta::new(host_user_account_pda, false),
+                    AccountMeta::new(vrf_result_pda, false),
+                    AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+                    AccountMeta::new_readonly(system_program::id(), false),
+                ],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&bettor, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+        // the bettor user account should be updated
+        let bettor_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(bettor_user_account_pda).await.unwrap();
+        assert_eq!(bettor_user_account_state.total_bets, 1);
+        assert_eq!(bettor_user_account_state.active_vrf_results, 1);
+        assert_eq!(bettor_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000);
+        // the stats account should be updated
+        let stats_state: Stats = banks_client.get_account_data_with_borsh(stats_pda).await.unwrap();
+        assert_eq!(stats_state.total_bets, 1);
+        assert_eq!(stats_state.total_wager, 2000);
+        // the game account should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert_eq!(game_state.unresolved_vrf_result, 1);
+        assert_eq!(game_state.total_lamports_in, 2000);
+        // the host user account should be updated
+        let host_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(host_user_account_pda).await.unwrap();
+        assert_eq!(host_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000 * 9900 / 10000);
+        // the vrf result account should be created
+        let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
+        assert_eq!(vrf_result_state.account_type, StateAccountType::Vrf);
+        assert!(!vrf_result_state.is_fullfilled);
+        assert!(!vrf_result_state.is_used);
+        assert!(!vrf_result_state.marked_for_close);
+        assert_eq!(vrf_result_state.owner, bettor.pubkey());
+        assert_eq!(vrf_result_state.game, game_pda);
+        assert_eq!(vrf_result_state.bet_id, 0);
+        assert_eq!(&vrf_result_state.alpha[8..40], bettor.pubkey().as_ref());
+        assert_eq!(vrf_result_state.beta, [0; 64]);
+        assert_eq!(vrf_result_state.pi, [0; 80]);
+        assert_eq!(vrf_result_state.locked_bettor_lamports, 2000);
+        assert_eq!(vrf_result_state.locked_host_lamports, 2000 * 9900 / 10000);
+        if let BetInput::CoinFlip { input } = vrf_result_state.bet_input {
+            assert_eq!(input.wager, 2000);
+            assert_eq!(input.side, CoinFlipSide::Head);
+        } else {
+            panic!()
+        }
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "InsufficientFunds")]
+    async fn test_game_place_bet_err_host_not_enough_money() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let bettor = Keypair::new();
+        program_test.add_account(
+            bettor.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let referral = Pubkey::new_unique();
+        let (bettor_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), bettor.pubkey().as_ref()], &program_id);
+        let mut bettor_user_account_state = UserAccount::new(bettor.pubkey(), Some(referral), Some("Bettor".to_string()));
+        bettor_user_account_state.current_lamports = LAMPORTS_PER_SOL;
+        let bettor_user_account_data = bettor_user_account_state.try_to_vec().unwrap();
+        let bettor_user_account_data_len = bettor_user_account_data.len();
+        program_test.add_account(
+            bettor_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(bettor_user_account_data_len),
+                data: bettor_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (stats_pda, _) = Pubkey::find_program_address(&[b"Stats".as_ref()], &program_id);
+        let mut stats_state = Stats::new();
+        stats_state.total_users = 1;
+        stats_state.total_games = 1;
+        let stats_data = stats_state.try_to_vec().unwrap();
+        let stats_data_len = stats_data.len();
+        program_test.add_account(
+            stats_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(stats_data_len),
+                data: stats_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let host = Pubkey::new_unique();
+        let (host_user_account_pda, _) = Pubkey::find_program_address(&[b"UserAccount".as_ref(), host.as_ref()], &program_id);
+        let mut host_user_account_state = UserAccount::new(host, None, None);
+        host_user_account_state.current_lamports = 1;
+        let host_user_account_data = host_user_account_state.try_to_vec().unwrap();
+        let host_user_account_data_len = host_user_account_data.len();
+        program_test.add_account(
+            host_user_account_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(host_user_account_data_len),
+                data: host_user_account_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let game_state = Game::new(
+            host,
+            1000,
+            10000,
+            GameTypeConfig::CoinFlip {
+                config: CoinFlipConfig {
+                    host_probability_advantage: 100,
+                    payout_rate: 9900,
+                },
+            },
+        );
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (vrf_result_pda, _) = Pubkey::find_program_address(
+            &[
+                b"VrfResult".as_ref(),
+                game_pda.as_ref(),
+                bettor.pubkey().as_ref(),
+                &bettor_user_account_state.total_bets.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GamePlaceBet {
+                    args: GamePlaceBetArgs {
+                        bet_input: BetInput::CoinFlip {
+                            input: CoinFlipInput {
+                                wager: 2000,
+                                side: CoinFlipSide::Head,
+                            },
+                        },
+                    },
+                },
+                vec![
+                    AccountMeta::new(bettor.pubkey(), true),
+                    AccountMeta::new(bettor_user_account_pda, false),
+                    AccountMeta::new(stats_pda, false),
+                    AccountMeta::new(game_pda, false),
+                    AccountMeta::new(host_user_account_pda, false),
+                    AccountMeta::new(vrf_result_pda, false),
+                    AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+                    AccountMeta::new_readonly(system_program::id(), false),
+                ],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&bettor, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+        // the bettor user account should be updated
+        let bettor_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(bettor_user_account_pda).await.unwrap();
+        assert_eq!(bettor_user_account_state.total_bets, 1);
+        assert_eq!(bettor_user_account_state.active_vrf_results, 1);
+        assert_eq!(bettor_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000);
+        // the stats account should be updated
+        let stats_state: Stats = banks_client.get_account_data_with_borsh(stats_pda).await.unwrap();
+        assert_eq!(stats_state.total_bets, 1);
+        assert_eq!(stats_state.total_wager, 2000);
+        // the game account should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert_eq!(game_state.unresolved_vrf_result, 1);
+        assert_eq!(game_state.total_lamports_in, 2000);
+        // the host user account should be updated
+        let host_user_account_state: UserAccount = banks_client.get_account_data_with_borsh(host_user_account_pda).await.unwrap();
+        assert_eq!(host_user_account_state.current_lamports, LAMPORTS_PER_SOL - 2000 * 9900 / 10000);
+        // the vrf result account should be created
+        let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
+        assert_eq!(vrf_result_state.account_type, StateAccountType::Vrf);
+        assert!(!vrf_result_state.is_fullfilled);
+        assert!(!vrf_result_state.is_used);
+        assert!(!vrf_result_state.marked_for_close);
+        assert_eq!(vrf_result_state.owner, bettor.pubkey());
+        assert_eq!(vrf_result_state.game, game_pda);
+        assert_eq!(vrf_result_state.bet_id, 0);
+        assert_eq!(&vrf_result_state.alpha[8..40], bettor.pubkey().as_ref());
+        assert_eq!(vrf_result_state.beta, [0; 64]);
+        assert_eq!(vrf_result_state.pi, [0; 80]);
+        assert_eq!(vrf_result_state.locked_bettor_lamports, 2000);
+        assert_eq!(vrf_result_state.locked_host_lamports, 2000 * 9900 / 10000);
+        if let BetInput::CoinFlip { input } = vrf_result_state.bet_input {
+            assert_eq!(input.wager, 2000);
+            assert_eq!(input.side, CoinFlipSide::Head);
+        } else {
+            panic!()
+        }
+    }
+}

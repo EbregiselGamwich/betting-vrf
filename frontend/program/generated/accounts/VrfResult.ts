@@ -30,6 +30,8 @@ export type VrfResultArgs = {
   alpha: number[] /* size: 72 */
   beta: number[] /* size: 64 */
   pi: number[] /* size: 80 */
+  lockedBettorLamports: beet.bignum
+  lockedHostLamports: beet.bignum
   betInput: BetInput
 }
 /**
@@ -51,6 +53,8 @@ export class VrfResult implements VrfResultArgs {
     readonly alpha: number[] /* size: 72 */,
     readonly beta: number[] /* size: 64 */,
     readonly pi: number[] /* size: 80 */,
+    readonly lockedBettorLamports: beet.bignum,
+    readonly lockedHostLamports: beet.bignum,
     readonly betInput: BetInput
   ) {}
 
@@ -69,6 +73,8 @@ export class VrfResult implements VrfResultArgs {
       args.alpha,
       args.beta,
       args.pi,
+      args.lockedBettorLamports,
+      args.lockedHostLamports,
       args.betInput
     )
   }
@@ -178,6 +184,28 @@ export class VrfResult implements VrfResultArgs {
       alpha: this.alpha,
       beta: this.beta,
       pi: this.pi,
+      lockedBettorLamports: (() => {
+        const x = <{ toNumber: () => number }>this.lockedBettorLamports
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
+      lockedHostLamports: (() => {
+        const x = <{ toNumber: () => number }>this.lockedHostLamports
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
       betInput: this.betInput.__kind,
     }
   }
@@ -202,6 +230,8 @@ export const vrfResultBeet = new beet.FixableBeetStruct<
     ['alpha', beet.uniformFixedSizeArray(beet.u8, 72)],
     ['beta', beet.uniformFixedSizeArray(beet.u8, 64)],
     ['pi', beet.uniformFixedSizeArray(beet.u8, 80)],
+    ['lockedBettorLamports', beet.u64],
+    ['lockedHostLamports', beet.u64],
     ['betInput', betInputBeet],
   ],
   VrfResult.fromArgs,

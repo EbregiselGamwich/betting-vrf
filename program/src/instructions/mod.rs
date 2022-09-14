@@ -11,8 +11,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 
 use self::{
-    game_create::GameCreateArgs, game_set_active::GameSetActiveArgs, user_account_create::UserAccountCreateArgs, user_account_deposit::UserAccountDepositArgs,
-    user_account_withdraw::UserAccountWithdrawArgs,
+    game_create::GameCreateArgs, game_place_bet::GamePlaceBetArgs, game_set_active::GameSetActiveArgs, user_account_create::UserAccountCreateArgs,
+    user_account_deposit::UserAccountDepositArgs, user_account_withdraw::UserAccountWithdrawArgs,
 };
 
 #[derive(BorshSerialize, BorshDeserialize, ShankInstruction, Clone)]
@@ -51,4 +51,13 @@ pub enum BettingInstruction {
     #[account(0, writable, signer, name = "host", desc = "The wallet account of the host")]
     #[account(1, writable, name = "game_pda", desc = "Game PDA Account")]
     GameSetActive { args: GameSetActiveArgs },
+    #[account(0, writable, signer, name = "bettor", desc = "Bettor wallet account")]
+    #[account(1, writable, name = "bettor_user_account", desc = "Bettor user account")]
+    #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
+    #[account(3, writable, name = "game_pda", desc = "Game PDA Account")]
+    #[account(4, writable, name = "host_user_account", desc = "Host user account")]
+    #[account(5, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
+    #[account(6, name = "slot_hashes", desc = "Slot hashes account")]
+    #[account(7, name = "system_program", desc = "System Program Account")]
+    GamePlaceBet { args: GamePlaceBetArgs },
 }

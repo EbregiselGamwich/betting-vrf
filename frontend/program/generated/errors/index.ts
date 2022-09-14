@@ -210,6 +210,26 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * GameNotActive: 'GameNotActive'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class GameNotActiveError extends Error {
+  readonly code: number = 0x9
+  readonly name: string = 'GameNotActive'
+  constructor() {
+    super('GameNotActive')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, GameNotActiveError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x9, () => new GameNotActiveError())
+createErrorFromNameLookup.set('GameNotActive', () => new GameNotActiveError())
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
