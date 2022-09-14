@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::program_error::ProgramError;
 
-use crate::state::vrf_result::VrfResult;
+use crate::state::{user_account::UserAccount, vrf_result::VrfResult};
 
 use super::{BetInput, CheckBetInput, Game, GameTypeConfig, ProcessVrfResult};
 
@@ -26,12 +26,30 @@ impl CheckBetInput for CrashInput {
             Ok(())
         }
     }
+
+    fn check_bettor_balance(&self, _game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError> {
+        if user_account.current_lamports >= self.wager {
+            Ok(self.wager)
+        } else {
+            Err(ProgramError::InsufficientFunds)
+        }
+    }
+
+    fn check_host_balance(&self, _game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError> {
+        let target_f = self.target_multiplier as f64 / 100.0;
+        let payout_if_bettor_win = (self.wager as f64 * target_f).floor() as u64;
+        if user_account.current_lamports >= payout_if_bettor_win {
+            Ok(payout_if_bettor_win)
+        } else {
+            Err(ProgramError::InsufficientFunds)
+        }
+    }
 }
 impl ProcessVrfResult for CrashConfig {
-    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<u64, ProgramError> {
-        CrashConfig::check_vrf_result(vrf_result)?;
+    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<bool, ProgramError> {
+        self.check_vrf_result(vrf_result)?;
         if let BetInput::Crash {
-            input: CrashInput { target_multiplier, wager },
+            input: CrashInput { target_multiplier, wager: _ },
         } = vrf_result.bet_input
         {
             let target_f = target_multiplier as f64 / 100.0;
@@ -48,9 +66,9 @@ impl ProcessVrfResult for CrashConfig {
             };
             // result
             if target_f <= multiplier {
-                Ok((wager as f64 * target_f).floor() as u64)
+                Ok(true)
             } else {
-                Ok(0)
+                Ok(false)
             }
         } else {
             Err(ProgramError::InvalidArgument)

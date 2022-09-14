@@ -3,7 +3,7 @@ use std::convert::TryInto;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::program_error::{self, ProgramError};
 
-use crate::state::vrf_result::VrfResult;
+use crate::state::{user_account::UserAccount, vrf_result::VrfResult};
 
 use super::{BetInput, CheckBetInput, Game, GameTypeConfig, ProcessVrfResult};
 
@@ -35,12 +35,33 @@ impl CheckBetInput for CoinFlipInput {
             Ok(())
         }
     }
+
+    fn check_bettor_balance(&self, _game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError> {
+        if user_account.current_lamports >= self.wager {
+            Ok(self.wager)
+        } else {
+            Err(ProgramError::InsufficientFunds)
+        }
+    }
+
+    fn check_host_balance(&self, game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError> {
+        if let GameTypeConfig::CoinFlip { config } = game.game_type_config {
+            let payout_if_bettor_win = self.wager * config.payout_rate / 10000;
+            if user_account.current_lamports >= payout_if_bettor_win {
+                Ok(payout_if_bettor_win)
+            } else {
+                Err(ProgramError::InsufficientFunds)
+            }
+        } else {
+            Err(ProgramError::InvalidArgument)
+        }
+    }
 }
 impl ProcessVrfResult for CoinFlipConfig {
-    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<u64, ProgramError> {
-        CoinFlipConfig::check_vrf_result(vrf_result)?;
+    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<bool, ProgramError> {
+        self.check_vrf_result(vrf_result)?;
         if let BetInput::CoinFlip {
-            input: CoinFlipInput { wager, side },
+            input: CoinFlipInput { wager: _, side },
         } = vrf_result.bet_input
         {
             let mut rand_bytes: [u8; 16] = Default::default();
@@ -49,16 +70,16 @@ impl ProcessVrfResult for CoinFlipConfig {
             match side {
                 CoinFlipSide::Head => {
                     if rand_number < 5000 - self.host_probability_advantage {
-                        Ok(wager + wager * (self.payout_rate) / 10000)
+                        Ok(true)
                     } else {
-                        Ok(0)
+                        Ok(false)
                     }
                 }
                 CoinFlipSide::Tail => {
                     if rand_number > 5000 + self.host_probability_advantage {
-                        Ok(wager + wager * (self.payout_rate) / 10000)
+                        Ok(true)
                     } else {
-                        Ok(0)
+                        Ok(false)
                     }
                 }
             }

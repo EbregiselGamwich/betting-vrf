@@ -9,7 +9,7 @@ use self::{
     crash::{CrashConfig, CrashInput},
 };
 
-use super::{vrf_result::VrfResult, BettingAccount, StateAccountType};
+use super::{user_account::UserAccount, vrf_result::VrfResult, BettingAccount, StateAccountType};
 
 pub mod coinflip;
 pub mod crash;
@@ -54,14 +54,30 @@ pub enum GameTypeConfig {
     CoinFlip { config: CoinFlipConfig },
     Crash { config: CrashConfig },
 }
+impl GameTypeConfig {
+    pub fn get_dyn_config(&self) -> Box<dyn ProcessVrfResult> {
+        match self {
+            GameTypeConfig::CoinFlip { config } => Box::new(*config),
+            GameTypeConfig::Crash { config } => Box::new(*config),
+        }
+    }
+}
 #[derive(BorshSerialize, BorshDeserialize, Clone, Copy)]
 pub enum BetInput {
     CoinFlip { input: CoinFlipInput },
     Crash { input: CrashInput },
 }
+impl BetInput {
+    pub fn get_dyn_input(&self) -> Box<dyn CheckBetInput> {
+        match self {
+            BetInput::CoinFlip { input } => Box::new(*input),
+            BetInput::Crash { input } => Box::new(*input),
+        }
+    }
+}
 pub trait ProcessVrfResult {
-    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<u64, ProgramError>;
-    fn check_vrf_result(vrf_result: &VrfResult) -> Result<(), ProgramError> {
+    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<bool, ProgramError>;
+    fn check_vrf_result(&self, vrf_result: &VrfResult) -> Result<(), ProgramError> {
         if !vrf_result.is_fullfilled {
             Err(ProgramError::from(BettingError::VrfResultNotFullfilled))
         } else if vrf_result.is_used {
@@ -73,4 +89,6 @@ pub trait ProcessVrfResult {
 }
 pub trait CheckBetInput {
     fn check_bet_input(&self, game: &Game) -> Result<(), ProgramError>;
+    fn check_bettor_balance(&self, game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError>;
+    fn check_host_balance(&self, game: &Game, user_account: &UserAccount) -> Result<u64, ProgramError>;
 }
