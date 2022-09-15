@@ -64,6 +64,12 @@ pub enum BettingInstruction {
     #[account(6, name = "slot_hashes", desc = "Slot hashes account")]
     #[account(7, name = "system_program", desc = "System Program Account")]
     GamePlaceBet { args: GamePlaceBetArgs },
+    #[account(0, writable, name = "game_pda", desc = "Game PDA Account")]
+    #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
+    #[account(2, writable, name = "host_user_account", desc = "Host user account")]
+    #[account(3, writable, name = "bettor_user_account", desc = "Bettor user account")]
+    #[account(4, writable, name = "stats_pda", desc = "Stats PDA Account")]
+    GameResolveVrfResult,
     #[account(0, signer, name = "operator", desc = "Operator Account")]
     #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
     VrfResultFullfill { args: VrfResultFullfillArgs },

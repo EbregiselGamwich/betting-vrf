@@ -336,6 +336,46 @@
       }
     },
     {
+      "name": "GameResolveVrfResult",
+      "accounts": [
+        {
+          "name": "gamePda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Game PDA Account"
+        },
+        {
+          "name": "vrfResultPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "VRF result PDA account"
+        },
+        {
+          "name": "hostUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Host user account"
+        },
+        {
+          "name": "bettorUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Bettor user account"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
       "name": "VrfResultFullfill",
       "accounts": [
         {
@@ -361,7 +401,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 8
+        "value": 9
       }
     },
     {
@@ -383,7 +423,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 9
+        "value": 10
       }
     },
     {
@@ -417,7 +457,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 10
+        "value": 11
       }
     }
   ],

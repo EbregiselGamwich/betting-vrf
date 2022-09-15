@@ -10,56 +10,67 @@ import * as web3 from '@solana/web3.js'
 
 /**
  * @category Instructions
- * @category VrfResultClose
+ * @category GameResolveVrfResult
  * @category generated
  */
-export const VrfResultCloseStruct = new beet.BeetArgsStruct<{
+export const GameResolveVrfResultStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number
-}>([['instructionDiscriminator', beet.u8]], 'VrfResultCloseInstructionArgs')
+}>(
+  [['instructionDiscriminator', beet.u8]],
+  'GameResolveVrfResultInstructionArgs'
+)
 /**
- * Accounts required by the _VrfResultClose_ instruction
+ * Accounts required by the _GameResolveVrfResult_ instruction
  *
+ * @property [_writable_] gamePda Game PDA Account
  * @property [_writable_] vrfResultPda VRF result PDA account
- * @property [_writable_, **signer**] bettor Bettor wallet account
+ * @property [_writable_] hostUserAccount Host user account
  * @property [_writable_] bettorUserAccount Bettor user account
+ * @property [_writable_] statsPda Stats PDA Account
  * @category Instructions
- * @category VrfResultClose
+ * @category GameResolveVrfResult
  * @category generated
  */
-export type VrfResultCloseInstructionAccounts = {
+export type GameResolveVrfResultInstructionAccounts = {
+  gamePda: web3.PublicKey
   vrfResultPda: web3.PublicKey
-  bettor: web3.PublicKey
+  hostUserAccount: web3.PublicKey
   bettorUserAccount: web3.PublicKey
-  systemProgram?: web3.PublicKey
+  statsPda: web3.PublicKey
 }
 
-export const vrfResultCloseInstructionDiscriminator = 11
+export const gameResolveVrfResultInstructionDiscriminator = 8
 
 /**
- * Creates a _VrfResultClose_ instruction.
+ * Creates a _GameResolveVrfResult_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category VrfResultClose
+ * @category GameResolveVrfResult
  * @category generated
  */
-export function createVrfResultCloseInstruction(
-  accounts: VrfResultCloseInstructionAccounts,
+export function createGameResolveVrfResultInstruction(
+  accounts: GameResolveVrfResultInstructionAccounts,
   programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
 ) {
-  const [data] = VrfResultCloseStruct.serialize({
-    instructionDiscriminator: vrfResultCloseInstructionDiscriminator,
+  const [data] = GameResolveVrfResultStruct.serialize({
+    instructionDiscriminator: gameResolveVrfResultInstructionDiscriminator,
   })
   const keys: web3.AccountMeta[] = [
+    {
+      pubkey: accounts.gamePda,
+      isWritable: true,
+      isSigner: false,
+    },
     {
       pubkey: accounts.vrfResultPda,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.bettor,
+      pubkey: accounts.hostUserAccount,
       isWritable: true,
-      isSigner: true,
+      isSigner: false,
     },
     {
       pubkey: accounts.bettorUserAccount,
@@ -67,8 +78,8 @@ export function createVrfResultCloseInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
-      isWritable: false,
+      pubkey: accounts.statsPda,
+      isWritable: true,
       isSigner: false,
     },
   ]

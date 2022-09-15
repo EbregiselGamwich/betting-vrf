@@ -66,7 +66,7 @@ impl ProcessVrfResult for CoinFlipConfig {
         {
             let mut rand_bytes: [u8; 16] = Default::default();
             rand_bytes.copy_from_slice(&vrf_result.beta[0..16]);
-            let rand_number: u64 = (u128::from_le_bytes(rand_bytes) & 10000).try_into().unwrap();
+            let rand_number: u64 = (u128::from_le_bytes(rand_bytes) % 10000).try_into().unwrap();
             match side {
                 CoinFlipSide::Head => {
                     if rand_number < 5000 - self.host_probability_advantage {

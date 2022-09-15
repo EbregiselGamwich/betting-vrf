@@ -50,7 +50,7 @@ export type VrfResultFullfillInstructionAccounts = {
   vrfResultPda: web3.PublicKey
 }
 
-export const vrfResultFullfillInstructionDiscriminator = 8
+export const vrfResultFullfillInstructionDiscriminator = 9
 
 /**
  * Creates a _VrfResultFullfill_ instruction.
