@@ -7,6 +7,7 @@ pub mod user_account_create;
 pub mod user_account_deposit;
 pub mod user_account_withdraw;
 pub mod vrf_result_fullfill;
+pub mod vrf_result_mark_close;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
@@ -64,4 +65,7 @@ pub enum BettingInstruction {
     #[account(0, signer, name = "operator", desc = "Operator Account")]
     #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
     VrfResultFullfill { args: VrfResultFullfillArgs },
+    #[account(0, signer, name = "bettor", desc = "Bettor wallet account")]
+    #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
+    VrfResultMarkClose,
 }

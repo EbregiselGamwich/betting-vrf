@@ -39,7 +39,7 @@ export const GameSetActiveStruct = new beet.BeetArgsStruct<
 /**
  * Accounts required by the _GameSetActive_ instruction
  *
- * @property [_writable_, **signer**] host The wallet account of the host
+ * @property [**signer**] host The wallet account of the host
  * @property [_writable_] gamePda Game PDA Account
  * @category Instructions
  * @category GameSetActive
@@ -74,7 +74,7 @@ export function createGameSetActiveInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.host,
-      isWritable: true,
+      isWritable: false,
       isSigner: true,
     },
     {

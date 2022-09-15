@@ -230,6 +230,52 @@ createErrorFromCodeLookup.set(0x9, () => new GameNotActiveError())
 createErrorFromNameLookup.set('GameNotActive', () => new GameNotActiveError())
 
 /**
+ * VrfResultAlreadyFullfilled: 'VrfResultAlreadyFullfilled'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class VrfResultAlreadyFullfilledError extends Error {
+  readonly code: number = 0xa
+  readonly name: string = 'VrfResultAlreadyFullfilled'
+  constructor() {
+    super('VrfResultAlreadyFullfilled')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, VrfResultAlreadyFullfilledError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xa, () => new VrfResultAlreadyFullfilledError())
+createErrorFromNameLookup.set(
+  'VrfResultAlreadyFullfilled',
+  () => new VrfResultAlreadyFullfilledError()
+)
+
+/**
+ * VrfResultNotUsed: 'VrfResultNotUsed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class VrfResultNotUsedError extends Error {
+  readonly code: number = 0xb
+  readonly name: string = 'VrfResultNotUsed'
+  constructor() {
+    super('VrfResultNotUsed')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, VrfResultNotUsedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xb, () => new VrfResultNotUsedError())
+createErrorFromNameLookup.set(
+  'VrfResultNotUsed',
+  () => new VrfResultNotUsedError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

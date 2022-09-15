@@ -246,7 +246,7 @@
       "accounts": [
         {
           "name": "host",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true,
           "desc": "The wallet account of the host"
         },
@@ -333,6 +333,57 @@
       "discriminant": {
         "type": "u8",
         "value": 7
+      }
+    },
+    {
+      "name": "VrfResultFullfill",
+      "accounts": [
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Operator Account"
+        },
+        {
+          "name": "vrfResultPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "VRF result PDA account"
+        }
+      ],
+      "args": [
+        {
+          "name": "vrfResultFullfillArgs",
+          "type": {
+            "defined": "VrfResultFullfillArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
+      "name": "VrfResultMarkClose",
+      "accounts": [
+        {
+          "name": "bettor",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Bettor wallet account"
+        },
+        {
+          "name": "vrfResultPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "VRF result PDA account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
       }
     }
   ],
@@ -729,6 +780,32 @@
       }
     },
     {
+      "name": "VrfResultFullfillArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "beta",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "pi",
+            "type": {
+              "array": [
+                "u8",
+                80
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "CoinFlipSide",
       "type": {
         "kind": "enum",
@@ -876,6 +953,16 @@
       "code": 9,
       "name": "GameNotActive",
       "msg": "GameNotActive"
+    },
+    {
+      "code": 10,
+      "name": "VrfResultAlreadyFullfilled",
+      "msg": "VrfResultAlreadyFullfilled"
+    },
+    {
+      "code": 11,
+      "name": "VrfResultNotUsed",
+      "msg": "VrfResultNotUsed"
     }
   ],
   "metadata": {
