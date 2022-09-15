@@ -6,6 +6,7 @@ pub mod user_account_close;
 pub mod user_account_create;
 pub mod user_account_deposit;
 pub mod user_account_withdraw;
+pub mod vrf_result_close;
 pub mod vrf_result_fullfill;
 pub mod vrf_result_mark_close;
 
@@ -68,4 +69,9 @@ pub enum BettingInstruction {
     #[account(0, signer, name = "bettor", desc = "Bettor wallet account")]
     #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
     VrfResultMarkClose,
+    #[account(0, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
+    #[account(1, writable, signer, name = "bettor", desc = "Bettor wallet account")]
+    #[account(2, writable, name = "bettor_user_account", desc = "Bettor user account")]
+    #[account(3, name = "system_program", desc = "System Program Account")]
+    VrfResultClose,
 }

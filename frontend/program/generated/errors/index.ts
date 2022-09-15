@@ -276,6 +276,29 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * VrfResultNotMarkedForClose: 'VrfResultNotMarkedForClose'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class VrfResultNotMarkedForCloseError extends Error {
+  readonly code: number = 0xc
+  readonly name: string = 'VrfResultNotMarkedForClose'
+  constructor() {
+    super('VrfResultNotMarkedForClose')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, VrfResultNotMarkedForCloseError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xc, () => new VrfResultNotMarkedForCloseError())
+createErrorFromNameLookup.set(
+  'VrfResultNotMarkedForClose',
+  () => new VrfResultNotMarkedForCloseError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

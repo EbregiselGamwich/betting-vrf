@@ -385,6 +385,40 @@
         "type": "u8",
         "value": 9
       }
+    },
+    {
+      "name": "VrfResultClose",
+      "accounts": [
+        {
+          "name": "vrfResultPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "VRF result PDA account"
+        },
+        {
+          "name": "bettor",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Bettor wallet account"
+        },
+        {
+          "name": "bettorUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Bettor user account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
     }
   ],
   "accounts": [
@@ -963,6 +997,11 @@
       "code": 11,
       "name": "VrfResultNotUsed",
       "msg": "VrfResultNotUsed"
+    },
+    {
+      "code": 12,
+      "name": "VrfResultNotMarkedForClose",
+      "msg": "VrfResultNotMarkedForClose"
     }
   ],
   "metadata": {

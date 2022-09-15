@@ -32,6 +32,8 @@ pub enum BettingError {
     VrfResultAlreadyFullfilled,
     #[error("VrfResultNotUsed")]
     VrfResultNotUsed,
+    #[error("VrfResultNotMarkedForClose")]
+    VrfResultNotMarkedForClose,
 }
 impl PrintProgramError for BettingError {
     fn print<E>(&self)
