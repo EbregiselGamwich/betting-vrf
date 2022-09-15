@@ -1,4 +1,5 @@
 use crate::instructions::user_account_withdraw::user_account_withdraw;
+use crate::instructions::vrf_result_fullfill::vrf_result_fullfill;
 use crate::instructions::{game_create::game_create, stats_account_create::stats_account_create};
 use crate::instructions::{game_place_bet::game_place_bet, user_account_deposit::user_account_deposit};
 use crate::instructions::{game_set_active::game_set_active, user_account_close::user_account_close};
@@ -19,6 +20,7 @@ impl Processor {
             BettingInstruction::GameCreate { args } => game_create(program_id, accounts, args),
             BettingInstruction::GameSetActive { args } => game_set_active(program_id, accounts, args),
             BettingInstruction::GamePlaceBet { args } => game_place_bet(program_id, accounts, args),
+            BettingInstruction::VrfResultFullfill { args } => vrf_result_fullfill(program_id, accounts, args),
         }
     }
 }

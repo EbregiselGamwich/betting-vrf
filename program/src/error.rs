@@ -28,6 +28,10 @@ pub enum BettingError {
     UserAccountNotSettled,
     #[error("GameNotActive")]
     GameNotActive,
+    #[error("VrfResultAlreadyFullfilled")]
+    VrfResultAlreadyFullfilled,
+    #[error("VrfResultNotUsed")]
+    VrfResultNotUsed,
 }
 impl PrintProgramError for BettingError {
     fn print<E>(&self)

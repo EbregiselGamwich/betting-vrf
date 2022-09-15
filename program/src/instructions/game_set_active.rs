@@ -113,11 +113,79 @@ mod test {
                 &BettingInstruction::GameSetActive {
                     args: GameSetActiveArgs { is_active: false },
                 },
-                vec![AccountMeta::new(user.pubkey(), true), AccountMeta::new(game_pda, false)],
+                vec![AccountMeta::new_readonly(user.pubkey(), true), AccountMeta::new(game_pda, false)],
             )],
             Some(&payer.pubkey()),
         );
         transaction.sign(&[&user, &payer], recent_blockhash);
+        banks_client.process_transaction(transaction).await.unwrap();
+
+        // the game state should be updated
+        let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
+        assert!(!game_state.is_active);
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "Custom(0)")]
+    async fn test_game_set_active_err_no_authority() {
+        let program_id = crate::id();
+        let mut program_test = ProgramTest::new("vrf_betting", program_id, None);
+
+        let user = Keypair::new();
+        program_test.add_account(
+            user.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let no_authority_user = Keypair::new();
+        program_test.add_account(
+            no_authority_user.pubkey(),
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                ..Default::default()
+            },
+        );
+
+        let game_state = Game::new(
+            user.pubkey(),
+            1000,
+            10000,
+            GameTypeConfig::Crash {
+                config: CrashConfig {
+                    multiplier_straight_one_possibility: 100,
+                },
+            },
+        );
+        let common_config_vec = game_state.common_config.try_to_vec().unwrap();
+        let game_type_config_vec = game_state.game_type_config.try_to_vec().unwrap();
+        let game_data = game_state.try_to_vec().unwrap();
+        let game_data_len = game_data.len();
+        let (game_pda, _) = Pubkey::find_program_address(&[b"Game".as_ref(), common_config_vec.as_slice(), game_type_config_vec.as_slice()], &program_id);
+        program_test.add_account(
+            game_pda,
+            Account {
+                lamports: Rent::default().minimum_balance(game_data_len),
+                data: game_data,
+                owner: program_id,
+                ..Default::default()
+            },
+        );
+
+        let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
+        let mut transaction = Transaction::new_with_payer(
+            &[Instruction::new_with_borsh(
+                program_id,
+                &BettingInstruction::GameSetActive {
+                    args: GameSetActiveArgs { is_active: false },
+                },
+                vec![AccountMeta::new_readonly(no_authority_user.pubkey(), true), AccountMeta::new(game_pda, false)],
+            )],
+            Some(&payer.pubkey()),
+        );
+        transaction.sign(&[&no_authority_user, &payer], recent_blockhash);
         banks_client.process_transaction(transaction).await.unwrap();
 
         // the game state should be updated
