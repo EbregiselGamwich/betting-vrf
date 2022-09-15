@@ -299,6 +299,26 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * GameNotSettled: 'GameNotSettled'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class GameNotSettledError extends Error {
+  readonly code: number = 0xd
+  readonly name: string = 'GameNotSettled'
+  constructor() {
+    super('GameNotSettled')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, GameNotSettledError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xd, () => new GameNotSettledError())
+createErrorFromNameLookup.set('GameNotSettled', () => new GameNotSettledError())
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

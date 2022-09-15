@@ -30,7 +30,7 @@ export type VrfResultMarkCloseInstructionAccounts = {
   vrfResultPda: web3.PublicKey
 }
 
-export const vrfResultMarkCloseInstructionDiscriminator = 10
+export const vrfResultMarkCloseInstructionDiscriminator = 11
 
 /**
  * Creates a _VrfResultMarkClose_ instruction.

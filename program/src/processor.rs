@@ -1,3 +1,4 @@
+use crate::instructions::game_close::game_close;
 use crate::instructions::game_resolve_vrf_result::game_resolve_vrf_result;
 use crate::instructions::user_account_withdraw::user_account_withdraw;
 use crate::instructions::vrf_result_close::vrf_result_close;
@@ -27,6 +28,7 @@ impl Processor {
             BettingInstruction::VrfResultMarkClose => vrf_result_mark_close(program_id, accounts),
             BettingInstruction::VrfResultClose => vrf_result_close(program_id, accounts),
             BettingInstruction::GameResolveVrfResult => game_resolve_vrf_result(program_id, accounts),
+            BettingInstruction::GameClose => game_close(program_id, accounts),
         }
     }
 }

@@ -376,6 +376,46 @@
       }
     },
     {
+      "name": "GameClose",
+      "accounts": [
+        {
+          "name": "host",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "The wallet account of the host"
+        },
+        {
+          "name": "hostUserAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User Betting Account of the host"
+        },
+        {
+          "name": "statsPda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Stats PDA Account"
+        },
+        {
+          "name": "gamePda",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Game PDA Account"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program Account"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
+      }
+    },
+    {
       "name": "VrfResultFullfill",
       "accounts": [
         {
@@ -401,7 +441,7 @@
       ],
       "discriminant": {
         "type": "u8",
-        "value": 9
+        "value": 10
       }
     },
     {
@@ -423,7 +463,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 10
+        "value": 11
       }
     },
     {
@@ -457,7 +497,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 11
+        "value": 12
       }
     }
   ],
@@ -1042,6 +1082,11 @@
       "code": 12,
       "name": "VrfResultNotMarkedForClose",
       "msg": "VrfResultNotMarkedForClose"
+    },
+    {
+      "code": 13,
+      "name": "GameNotSettled",
+      "msg": "GameNotSettled"
     }
   ],
   "metadata": {

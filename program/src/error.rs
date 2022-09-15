@@ -34,6 +34,8 @@ pub enum BettingError {
     VrfResultNotUsed,
     #[error("VrfResultNotMarkedForClose")]
     VrfResultNotMarkedForClose,
+    #[error("GameNotSettled")]
+    GameNotSettled,
 }
 impl PrintProgramError for BettingError {
     fn print<E>(&self)

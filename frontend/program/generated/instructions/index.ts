@@ -1,3 +1,4 @@
+export * from './GameClose'
 export * from './GameCreate'
 export * from './GamePlaceBet'
 export * from './GameResolveVrfResult'

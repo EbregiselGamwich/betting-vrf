@@ -1,3 +1,4 @@
+pub mod game_close;
 pub mod game_create;
 pub mod game_place_bet;
 pub mod game_resolve_vrf_result;
@@ -70,6 +71,12 @@ pub enum BettingInstruction {
     #[account(3, writable, name = "bettor_user_account", desc = "Bettor user account")]
     #[account(4, writable, name = "stats_pda", desc = "Stats PDA Account")]
     GameResolveVrfResult,
+    #[account(0, writable, signer, name = "host", desc = "The wallet account of the host")]
+    #[account(1, writable, name = "host_user_account", desc = "User Betting Account of the host")]
+    #[account(2, writable, name = "stats_pda", desc = "Stats PDA Account")]
+    #[account(3, writable, name = "game_pda", desc = "Game PDA Account")]
+    #[account(4, name = "system_program", desc = "System Program Account")]
+    GameClose,
     #[account(0, signer, name = "operator", desc = "Operator Account")]
     #[account(1, writable, name = "vrf_result_pda", desc = "VRF result PDA account")]
     VrfResultFullfill { args: VrfResultFullfillArgs },
