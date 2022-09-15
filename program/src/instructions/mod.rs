@@ -1,5 +1,6 @@
 pub mod game_create;
 pub mod game_place_bet;
+pub mod game_resolve_vrf_result;
 pub mod game_set_active;
 pub mod stats_account_create;
 pub mod user_account_close;
