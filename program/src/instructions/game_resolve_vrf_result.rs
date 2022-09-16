@@ -64,35 +64,23 @@ pub fn game_resolve_vrf_result(_program_id: &Pubkey, accounts: &[AccountInfo]) -
 
     // bet result
     let game_type_dyn = game_state.game_type_config.get_dyn_config();
-    if game_type_dyn.process_vrf_result(&vrf_result_state)? {
-        // bettor won
-        // update game account
-        game_state.unresolved_vrf_result -= 1;
-        game_state.total_lamports_out += vrf_result_state.locked_host_lamports;
-        game_state.serialize(&mut &mut game_account_info.data.borrow_mut()[..])?;
-        // update vrf result account
-        vrf_result_state.is_used = true;
-        vrf_result_state.serialize(&mut &mut vrf_result_account_info.data.borrow_mut()[..])?;
-        // update bettor user account
-        bettor_user_account_state.current_lamports += vrf_result_state.locked_bettor_lamports; // return locked wager
-        bettor_user_account_state.current_lamports += vrf_result_state.locked_host_lamports; // get lamports won from the host
-        bettor_user_account_state.serialize(&mut &mut bettor_user_account_info.data.borrow_mut()[..])?;
-        // update stasts account
-        stats_state.total_lamports_won_by_bettors += vrf_result_state.locked_host_lamports;
-        stats_state.serialize(&mut &mut stats_account_info.data.borrow_mut()[..])?;
-    } else {
-        // bettor lost
-        // update game account
-        game_state.unresolved_vrf_result -= 1;
-        game_state.serialize(&mut &mut game_account_info.data.borrow_mut()[..])?;
-        // update vrf result account
-        vrf_result_state.is_used = true;
-        vrf_result_state.serialize(&mut &mut vrf_result_account_info.data.borrow_mut()[..])?;
-        // update host user account
-        host_user_account_state.current_lamports += vrf_result_state.locked_host_lamports;
-        host_user_account_state.current_lamports += vrf_result_state.locked_bettor_lamports;
-        host_user_account_state.serialize(&mut &mut host_user_account_info.data.borrow_mut()[..])?;
-    }
+    let (host_gain, bettor_gain) = game_type_dyn.process_vrf_result(&vrf_result_state)?;
+    // update game account
+    game_state.unresolved_vrf_result -= 1;
+    game_state.total_lamports_out += bettor_gain;
+    game_state.serialize(&mut &mut game_account_info.data.borrow_mut()[..])?;
+    // update vrf result account
+    vrf_result_state.is_used = true;
+    vrf_result_state.serialize(&mut &mut vrf_result_account_info.data.borrow_mut()[..])?;
+    // update host user account
+    host_user_account_state.current_lamports += host_gain;
+    host_user_account_state.serialize(&mut &mut host_user_account_info.data.borrow_mut()[..])?;
+    // update bettor user account
+    bettor_user_account_state.current_lamports += bettor_gain;
+    bettor_user_account_state.serialize(&mut &mut bettor_user_account_info.data.borrow_mut()[..])?;
+    // update stats account
+    stats_state.total_lamports_won_by_bettors += bettor_gain - vrf_result_state.locked_bettor_lamports;
+    stats_state.serialize(&mut &mut stats_account_info.data.borrow_mut()[..])?;
 
     Ok(())
 }
@@ -257,7 +245,7 @@ mod test {
         // the game pda should be updated
         let game_state: Game = banks_client.get_account_data_with_borsh(game_pda).await.unwrap();
         assert_eq!(game_state.unresolved_vrf_result, 0);
-        assert_eq!(game_state.total_lamports_out, 2000 * 9900 / 10000);
+        assert_eq!(game_state.total_lamports_out, 2000 + 2000 * 9900 / 10000);
         // the vrf result should be update
         let vrf_result_state: VrfResult = banks_client.get_account_data_with_borsh(vrf_result_pda).await.unwrap();
         assert!(vrf_result_state.is_used);

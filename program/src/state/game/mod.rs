@@ -76,7 +76,7 @@ impl BetInput {
     }
 }
 pub trait ProcessVrfResult {
-    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<bool, ProgramError>;
+    fn process_vrf_result(&self, vrf_result: &VrfResult) -> Result<(u64, u64), ProgramError>;
     fn check_vrf_result(&self, vrf_result: &VrfResult) -> Result<(), ProgramError> {
         if !vrf_result.is_fullfilled {
             Err(ProgramError::from(BettingError::VrfResultNotFullfilled))
