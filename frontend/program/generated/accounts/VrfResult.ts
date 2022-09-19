@@ -115,7 +115,7 @@ export class VrfResult implements VrfResultArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm'
+      '9f2Yc9UYah7ARVMvJLVTqnJCnDv3ofSG1PSvJwikgEn4'
     )
   ) {
     return beetSolana.GpaBuilder.fromStruct(programId, vrfResultBeet)

@@ -65,7 +65,7 @@ export const vrfResultFullfillInstructionDiscriminator = 10
 export function createVrfResultFullfillInstruction(
   accounts: VrfResultFullfillInstructionAccounts,
   args: VrfResultFullfillInstructionArgs,
-  programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
+  programId = new web3.PublicKey('9f2Yc9UYah7ARVMvJLVTqnJCnDv3ofSG1PSvJwikgEn4')
 ) {
   const [data] = VrfResultFullfillStruct.serialize({
     instructionDiscriminator: vrfResultFullfillInstructionDiscriminator,

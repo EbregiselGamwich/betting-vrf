@@ -43,7 +43,7 @@ export const statsAccountCreateInstructionDiscriminator = 0
  */
 export function createStatsAccountCreateInstruction(
   accounts: StatsAccountCreateInstructionAccounts,
-  programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
+  programId = new web3.PublicKey('9f2Yc9UYah7ARVMvJLVTqnJCnDv3ofSG1PSvJwikgEn4')
 ) {
   const [data] = StatsAccountCreateStruct.serialize({
     instructionDiscriminator: statsAccountCreateInstructionDiscriminator,

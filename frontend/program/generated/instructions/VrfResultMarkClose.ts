@@ -42,7 +42,7 @@ export const vrfResultMarkCloseInstructionDiscriminator = 11
  */
 export function createVrfResultMarkCloseInstruction(
   accounts: VrfResultMarkCloseInstructionAccounts,
-  programId = new web3.PublicKey('HiEuiREGdSuBYv4oxtdkWnYtcnNUKk8m93XSn8pPYtcm')
+  programId = new web3.PublicKey('9f2Yc9UYah7ARVMvJLVTqnJCnDv3ofSG1PSvJwikgEn4')
 ) {
   const [data] = VrfResultMarkCloseStruct.serialize({
     instructionDiscriminator: vrfResultMarkCloseInstructionDiscriminator,
