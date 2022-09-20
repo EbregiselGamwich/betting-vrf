@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { CoinFlipInput } from './CoinFlipInput'
-import { CrashInput } from './CrashInput'
+import * as beet from '@metaplex-foundation/beet';
+import { CoinFlipInput, coinFlipInputBeet } from './CoinFlipInput';
+import { CrashInput, crashInputBeet } from './CrashInput';
 /**
  * This type is used to derive the {@link BetInput} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link BetInput} type instead.
@@ -18,9 +18,9 @@ import { CrashInput } from './CrashInput'
  * @private
  */
 export type BetInputRecord = {
-  CoinFlip: { input: CoinFlipInput }
-  Crash: { input: CrashInput }
-}
+  CoinFlip: { input: CoinFlipInput };
+  Crash: { input: CrashInput };
+};
 
 /**
  * Union type respresenting the BetInput data enum defined in Rust.
@@ -33,14 +33,14 @@ export type BetInputRecord = {
  * @category enums
  * @category generated
  */
-export type BetInput = beet.DataEnumKeyAsKind<BetInputRecord>
+export type BetInput = beet.DataEnumKeyAsKind<BetInputRecord>;
 
 export const isBetInputCoinFlip = (
   x: BetInput
-): x is BetInput & { __kind: 'CoinFlip' } => x.__kind === 'CoinFlip'
+): x is BetInput & { __kind: 'CoinFlip' } => x.__kind === 'CoinFlip';
 export const isBetInputCrash = (
   x: BetInput
-): x is BetInput & { __kind: 'Crash' } => x.__kind === 'Crash'
+): x is BetInput & { __kind: 'Crash' } => x.__kind === 'Crash';
 
 /**
  * @category userTypes
@@ -62,4 +62,4 @@ export const betInputBeet = beet.dataEnum<BetInputRecord>([
       'BetInputRecord["Crash"]'
     ),
   ],
-]) as beet.FixableBeet<BetInput>
+]) as beet.FixableBeet<BetInput>;

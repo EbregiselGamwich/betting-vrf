@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { CoinFlipConfig } from './CoinFlipConfig'
-import { CrashConfig } from './CrashConfig'
+import * as beet from '@metaplex-foundation/beet';
+import { CoinFlipConfig, coinFlipConfigBeet } from './CoinFlipConfig';
+import { CrashConfig, crashConfigBeet } from './CrashConfig';
 /**
  * This type is used to derive the {@link GameTypeConfig} type as well as the de/serializer.
  * However don't refer to it in your code but use the {@link GameTypeConfig} type instead.
@@ -18,9 +18,9 @@ import { CrashConfig } from './CrashConfig'
  * @private
  */
 export type GameTypeConfigRecord = {
-  CoinFlip: { config: CoinFlipConfig }
-  Crash: { config: CrashConfig }
-}
+  CoinFlip: { config: CoinFlipConfig };
+  Crash: { config: CrashConfig };
+};
 
 /**
  * Union type respresenting the GameTypeConfig data enum defined in Rust.
@@ -33,14 +33,14 @@ export type GameTypeConfigRecord = {
  * @category enums
  * @category generated
  */
-export type GameTypeConfig = beet.DataEnumKeyAsKind<GameTypeConfigRecord>
+export type GameTypeConfig = beet.DataEnumKeyAsKind<GameTypeConfigRecord>;
 
 export const isGameTypeConfigCoinFlip = (
   x: GameTypeConfig
-): x is GameTypeConfig & { __kind: 'CoinFlip' } => x.__kind === 'CoinFlip'
+): x is GameTypeConfig & { __kind: 'CoinFlip' } => x.__kind === 'CoinFlip';
 export const isGameTypeConfigCrash = (
   x: GameTypeConfig
-): x is GameTypeConfig & { __kind: 'Crash' } => x.__kind === 'Crash'
+): x is GameTypeConfig & { __kind: 'Crash' } => x.__kind === 'Crash';
 
 /**
  * @category userTypes
@@ -62,4 +62,4 @@ export const gameTypeConfigBeet = beet.dataEnum<GameTypeConfigRecord>([
       'GameTypeConfigRecord["Crash"]'
     ),
   ],
-]) as beet.FixableBeet<GameTypeConfig>
+]) as beet.FixableBeet<GameTypeConfig>;
